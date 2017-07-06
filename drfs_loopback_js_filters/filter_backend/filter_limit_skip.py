@@ -8,33 +8,39 @@ from rest_framework import exceptions
 
 class ProcessLimitSkipFilter:
     def __init__(self, queryset, _filter):
-        limit = _filter.get('limit', None)
-        skip = _filter.get('skip', None)
+        self.limit = _filter.get('limit', None)
+        self.skip = _filter.get('skip', None)
+        self.queryset = queryset
 
-        self.validate_value('limit', limit)
-        self.validate_value('skip', skip)
 
-        if limit == 0:
-            raise exceptions.NotAcceptable(
-                "Parameter for 'limit' filter should be greater than zero")
+    def filter_queryset(self):
+        self.validate_value('limit', self.limit)
+        self.validate_value('skip', self.skip)
+        queryset = self.queryset
 
-        if skip and queryset.count() < skip:
+        if self.skip and self.queryset.count() < self.skip:
             return queryset.none()
 
-        if skip is not None and limit is not None:
-            self.queryset = queryset[skip:]
-            self.queryset = self.queryset[:limit]
-        elif skip is not None:
-            self.queryset = queryset[skip:]
-        elif limit is not None:
-            self.queryset = queryset[:limit]
-        else:
-            self.queryset = queryset
+        if self.skip is not None:
+            queryset = queryset[self.skip:]
+        if self.limit is not None:
+            queryset = queryset[:self.limit]
+
+        return queryset
 
 
     def validate_value(self, property, value):
         if value is not None:
             if not isinstance(value, int):
-                raise exceptions.NotAcceptable("Parameter for '"+property+"' filter should be <type 'int'>, got - "+str(type(value)))
+                raise exceptions.NotAcceptable(
+                    "Parameter for '"+property+"' filter should be <type 'int'>, got - "+str(type(value))
+                )
             if value < 0:
-                raise exceptions.NotAcceptable("Parameter for '"+property+"' filter should be positive number or zero")
+                raise exceptions.NotAcceptable(
+                    "Parameter for '"+property+"' filter should be positive number or zero"
+                )
+
+        if property == 'limit' and limit == 0:
+            raise exceptions.NotAcceptable(
+                "Parameter for 'limit' filter should be greater than zero"
+            )

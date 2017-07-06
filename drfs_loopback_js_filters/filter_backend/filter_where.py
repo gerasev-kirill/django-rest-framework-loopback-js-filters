@@ -13,25 +13,36 @@ from django.db.models import Q
 class ProcessWhereFilter:
     def __init__(self, queryset, _where):
         if not isinstance(_where, dict):
-            raise exceptions.ParseError("Parameter 'where' expected to be <type 'json'>, got - " + str(type(_where)))
+            raise exceptions.ParseError("Parameter 'where' expected to be <type 'dict'>, got - " + str(type(_where)))
         self.model_fields = queryset.model._meta.get_fields()
+        self.queryset = queryset
+        self.where = _where
+
+
+    def filter_queryset(self):
         q = Q()
 
-        if 'or' in _where.keys():
-            if not isinstance(_where['or'], list):
-                raise exceptions.ParseError("Parameter 'or' for parameter 'where' expected to be <type 'array'>, got - " + str(type(_where['or'])))
-            for v in _where['or']:
+        if 'or' in self.where.keys():
+            if not isinstance(self.where['or'], list):
+                raise exceptions.ParseError(
+                    "Parameter 'or' for parameter 'where' expected to be <type 'array'>, got - " + str(type(self.where['or']))
+                )
+            for v in self.where['or']:
                 q |= self.generate_rawq(v)
-        elif 'and' in _where.keys():
-            if not isinstance(_where['and'], list):
-                raise exceptions.ParseError("Parameter for 'and' operator expected to be <type 'array'>, got - "+str(type(_where['and'])))
+        elif 'and' in self.where.keys():
+            if not isinstance(self.where['and'], list):
+                raise exceptions.ParseError(
+                    "Parameter for 'and' operator expected to be <type 'array'>, got - "+str(type(self.where['and']))
+                )
             m = {}
-            for o in _where['and']:
+            for o in self.where['and']:
                 m.update(m)
             q = self.generate_rawq(m)
         else:
-            q = self.generate_rawq(_where)
-        self.queryset = queryset.filter(q)
+            q = self.generate_rawq(self.where)
+
+        return self.queryset.filter(q)
+
 
 
     def validate_value(self, property, value):
@@ -42,6 +53,7 @@ class ProcessWhereFilter:
                 except djExceptions.ValidationError as e:
                     raise exceptions.ParseError("Field '"+property+"' validation error: "+str(e))
         return value
+
 
     def generate_rawq(self, data):
         q = Q()

@@ -14,18 +14,20 @@ from .filter_order import ProcessOrderFilter
 
 class LoopbackJsFilterBackend(BaseFilterBackend):
 
-
     def _filter_queryset(self, request, queryset, _filter):
-        e = ProcessOrderFilter(queryset, _filter)
-        queryset = e.queryset
-        if _filter.get('fields',None):
-            ProcessFieldsFilter(request, queryset, _filter['fields'])
-        if _filter.get('where', None):
-            e = ProcessWhereFilter(queryset, _filter['where'])
-            queryset = e.queryset
+        p = ProcessOrderFilter(queryset, _filter.get('order', None))
+        queryset = p.filter_queryset()
 
-        e = ProcessLimitSkipFilter(queryset, _filter)
-        return e.queryset
+        if _filter.get('fields',None):
+            p = ProcessFieldsFilter(request, queryset, _filter['fields'])
+            queryset = p.filter_queryset()
+
+        if _filter.get('where', None):
+            p = ProcessWhereFilter(queryset, _filter['where'])
+            queryset = p.filter_queryset()
+
+        p = ProcessLimitSkipFilter(queryset, _filter)
+        return p.filter_queryset()
 
 
     def filter_queryset(self, request, queryset, view):
@@ -34,7 +36,7 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
         _filter = query.get('filter', None)
 
         if _where and _filter:
-            raise exceptions.NotAcceptable("Provide 'filter' OR 'where' query. Not both at the same time.")
+            raise exceptions.NotAcceptable("Provide 'filter' OR 'where' query. Not both at the same time")
         if not _filter and not _where:
             return queryset
 

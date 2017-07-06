@@ -11,34 +11,41 @@ SORT_TYPES = {
 
 
 class ProcessOrderFilter:
-    def __init__(self, queryset, _filter):
-        order = _filter.get('order', None)
-        if order:
-            self.model_fields = queryset.model._meta.get_fields()
-            self.model_name = queryset.model.__name__
-            self.validate_value(order)
+    def __init__(self, queryset, _order):
+        self.order = _order
+        self.model_fields = queryset.model._meta.get_fields()
+        self.model_name = queryset.model.__name__
+        self.queryset = queryset
 
-            field_name, sort_type = order.split(' ')
+
+    def filter_queryset(self):
+        if self.order:
+            self.validate_value(self.order)
+            field_name, sort_type = self.order.split(' ')
             sort_type = SORT_TYPES[sort_type]
-            self.queryset = queryset.order_by(sort_type+field_name)
+            return self.queryset.order_by(sort_type+field_name)
 
-        else:
-            self.queryset = queryset
+        return self.queryset
 
 
     def validate_value(self, value):
         if not isinstance(value, str) and not isinstance(value, unicode):
             raise exceptions.NotAcceptable("Parameter for 'order' filter should be <type 'str'>, got - "+str(type(value)))
+
         v = value.split(' ')
-        exists = False
         if len(v)!=2:
             raise exceptions.ParseError("Malformed parameter for 'order' filter. See https://loopback.io/doc/en/lb2/Order-filter.html")
-        if v[1] not in ['ASC', 'DESC']:
+
+        order_field, order_type = v
+
+        if order_type not in SORT_TYPES.keys():
             raise exceptions.ParseError("Malformed parameter for 'order' filter. See https://loopback.io/doc/en/lb2/Order-filter.html")
 
+        field_exists = False
         for p in self.model_fields:
-            if p.name == v[0]:
-                exists = True
+            if p.name == order_field:
+                field_exists = True
                 break
-        if not exists:
-            raise exceptions.ParseError("Field '"+v[0]+"' for model '"+self.model_name+"' does't exists. You can't use order filter")
+
+        if not field_exists:
+            raise exceptions.ParseError("Field '"+order_field+"' for model '"+self.model_name+"' does't exists. You can't use order filter")
