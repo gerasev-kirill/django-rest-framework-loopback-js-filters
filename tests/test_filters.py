@@ -1,0 +1,1 @@
+from drfs_loopback_js_filters import LoopbackJsFilterBackend

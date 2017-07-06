@@ -1,0 +1,9 @@
+dist
+*.egg-info
+*.pyc
+*.pyo
+ap2
+*.sqlite3
+.*
+/key.json
+!.gitignore
