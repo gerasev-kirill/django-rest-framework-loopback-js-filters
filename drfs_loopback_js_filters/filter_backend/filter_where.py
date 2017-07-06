@@ -12,14 +12,18 @@ from django.db.models import Q
 
 class ProcessWhereFilter:
     def __init__(self, queryset, _where):
-        if not isinstance(_where, dict):
-            raise exceptions.ParseError("Parameter 'where' expected to be <type 'dict'>, got - " + str(type(_where)))
         self.model_fields = queryset.model._meta.get_fields()
         self.queryset = queryset
+        self.model_name = queryset.model.__name__
         self.where = _where
 
 
     def filter_queryset(self):
+        if not isinstance(self.where, dict):
+            raise exceptions.ParseError(
+                "Parameter 'where' expected to be <type 'dict'>, got - " + str(type(self.where))
+            )
+
         q = Q()
 
         if 'or' in self.where.keys():
@@ -34,25 +38,61 @@ class ProcessWhereFilter:
                 raise exceptions.ParseError(
                     "Parameter for 'and' operator expected to be <type 'array'>, got - "+str(type(self.where['and']))
                 )
-            m = {}
+            _q = {}
             for o in self.where['and']:
-                m.update(m)
-            q = self.generate_rawq(m)
+                _q.update(o)
+            q = self.generate_rawq(_q)
         else:
             q = self.generate_rawq(self.where)
 
         return self.queryset.filter(q)
 
 
+    def get_field_by_path(self, property):
+        def get_field(model_fields, _property_path):
+            if not _property_path:
+                return None
+            field_instance = None
+            property_name = _property_path.pop(0)
+            for field in model_fields:
+                if field.name == property_name:
+                    related_model = getattr(field, 'related_model', None)
+                    if related_model and _property_path:
+                        # relational field
+                        field_instance = get_field(
+                            related_model._meta.get_fields(),
+                            _property_path
+                        )
+                        break
+                    elif related_model and not _property_path:
+                        # can't query by related_model and not by field
+                        raise exceptions.NotAcceptable(
+                            "To filter queryset against related model '"+related_model.__name__+"' use '"+property+".some_field' instead '"+property+"'"
+                        )
+                    elif not related_model:
+                        # regular field
+                        field_instance = field
+                        break
+            return field_instance
+
+        _property = property.split('.')
+        if len(_property) == 1:
+            _property = property.split('__')
+        return get_field(self.model_fields, list(_property)), '__'.join(_property)
+
+
 
     def validate_value(self, property, value):
-        for p in self.model_fields:
-            if p.name == property:
-                try:
-                    value = p.to_python(value)
-                except djExceptions.ValidationError as e:
-                    raise exceptions.ParseError("Field '"+property+"' validation error: "+str(e))
-        return value
+        field_instance, normalized_property = self.get_field_by_path(property)
+        if not field_instance:
+            raise exceptions.ParseError("Field '"+property+"' for model '"+self.model_name+"' does't exists. You can't use where filter")
+
+        try:
+            value = field_instance.to_python(value)
+        except djExceptions.ValidationError as e:
+            raise exceptions.ParseError("Field '"+property+"' validation error: "+str(e))
+        return normalized_property, value
+
 
 
     def generate_rawq(self, data):
@@ -85,9 +125,13 @@ class ProcessWhereFilter:
 
     def _between(self, q, property, value):
         if not isinstance(value, list):
-            raise exceptions.ParseError("Parameter for property '"+property+"' with operator 'between' expected to be <type 'array'>, got - "+str(type(value)))
+            raise exceptions.ParseError(
+                "Parameter for property '"+property+"' with operator 'between' expected to be <type 'array'>, got - "+str(type(value))
+            )
         if len(value)!=2:
-            raise exceptions.ParseError("Parameter for property '"+property+"' with operator 'between' expected to be <type 'array'> with 2 elements. Got "+len(value)+" elements")
+            raise exceptions.ParseError(
+                "Parameter for property '"+property+"' with operator 'between' expected to be <type 'array'> with 2 elements. Got "+str(len(value))+" elements"
+            )
         q['filter'][property+'__gte'] = value[0]
         q['filter'][property+'__lte'] = value[1]
 
@@ -112,22 +156,28 @@ class ProcessWhereFilter:
     def _nlike(self, q, property, value):
         q['exclude'][property+'__contains'] = value
 
+    def _ilike(self, q, property, value):
+        q['filter'][property+'__icontains'] = value
 
+    def _nilike(self, q, property, value):
+        q['exclude'][property+'__icontains'] = value
 
 
     def lb_query_to_rawq(self, property, data):
         q = {'filter':{}, 'exclude':{}}
-        if isinstance(data, unicode) or isinstance(data, str) or isinstance(data, bool) or isinstance(data, int) or isinstance(data, float) or data is None:
-            data = self.validate_value(property, data)
+        if isinstance(data, (unicode, str, bool, int, float)) or data is None:
+            property, data = self.validate_value(property, data)
             q['filter'][property] = data
             return q
         if not isinstance(data, dict):
-            raise exceptions.ParseError("Parameters for property '"+property+"' expected to be <type 'str'>, <type 'number'>, <type 'bool'> or <type 'json'>, got - " + str(type(data)))
+            raise exceptions.ParseError("Parameters for property '"+property+"' expected to be <type 'str'>, <type 'number'>, <type 'bool'> or <type 'dict'>, got - " + str(type(data)))
+
+        field_instance, normalized_property = self.get_field_by_path(property)
 
         for k,v in data.items():
             func = getattr(self, '_' + k, None)
             if not func:
                 raise exceptions.ParseError("Unknown parameter '"+k+"' for property '"+property+"' for 'where' filter")
-            func(q, property, v)
+            func(q, normalized_property, v)
 
         return q

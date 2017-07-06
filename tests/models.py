@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 
 
 
@@ -9,3 +9,5 @@ class TestModel(models.Model):
     float_field = models.FloatField(null=True)
     date_field = models.DateField(null=True)
     datetime_field = models.DateTimeField(null=True)
+
+    foreign_field = models.ForeignKey(User, null=True)
