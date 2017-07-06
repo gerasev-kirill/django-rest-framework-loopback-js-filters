@@ -1,0 +1,272 @@
+[
+    {
+        "pk": 1, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 30.77, 
+            "int_field": 200, 
+            "string_field": "set handy", 
+            "date_field": "2017-02-14"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 30.77, 
+            "int_field": -10, 
+            "string_field": "tools tests", 
+            "date_field": "2009-03-03"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 10.3, 
+            "int_field": 55, 
+            "string_field": "handy of a", 
+            "date_field": "2017-06-08"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": -10.3, 
+            "int_field": -300, 
+            "string_field": "that when", 
+            "date_field": "2009-03-03"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 30.77, 
+            "int_field": 1, 
+            "string_field": "set when", 
+            "date_field": "2009-03-03"
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 20.2, 
+            "int_field": 100, 
+            "string_field": "small set a", 
+            "date_field": "2017-06-07"
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 20.4, 
+            "int_field": 1, 
+            "string_field": "of a", 
+            "date_field": "2017-06-08"
+        }
+    }, 
+    {
+        "pk": 8, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 30.77, 
+            "int_field": 10, 
+            "string_field": "tools tools", 
+            "date_field": "2017-06-08"
+        }
+    }, 
+    {
+        "pk": 9, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 30.77, 
+            "int_field": 1, 
+            "string_field": "of in that", 
+            "date_field": "2017-02-14"
+        }
+    }, 
+    {
+        "pk": 10, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": -10.3, 
+            "int_field": -20, 
+            "string_field": "writing that", 
+            "date_field": "2000-10-10"
+        }
+    }, 
+    {
+        "pk": 11, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 20.2, 
+            "int_field": 100, 
+            "string_field": "Django of", 
+            "date_field": "2017-06-08"
+        }
+    }, 
+    {
+        "pk": 12, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": -10.4, 
+            "int_field": 200, 
+            "string_field": "writing tools tests", 
+            "date_field": "2017-05-20"
+        }
+    }, 
+    {
+        "pk": 13, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 20.4, 
+            "int_field": 200, 
+            "string_field": "handy come", 
+            "date_field": "2017-02-14"
+        }
+    }, 
+    {
+        "pk": 14, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": -10.5, 
+            "int_field": 1, 
+            "string_field": "of that", 
+            "date_field": "2000-10-10"
+        }
+    }, 
+    {
+        "pk": 15, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 30.77, 
+            "int_field": 33, 
+            "string_field": "a provides tools", 
+            "date_field": "2000-10-10"
+        }
+    }, 
+    {
+        "pk": 16, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": -10.4, 
+            "int_field": 20, 
+            "string_field": "of writing", 
+            "date_field": "2017-06-07"
+        }
+    }, 
+    {
+        "pk": 17, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": -10.4, 
+            "int_field": -20, 
+            "string_field": "provides tests", 
+            "date_field": "2017-06-07"
+        }
+    }, 
+    {
+        "pk": 18, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": -20.3, 
+            "int_field": 20, 
+            "string_field": "provides small handy", 
+            "date_field": "2017-02-14"
+        }
+    }, 
+    {
+        "pk": 19, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 10.3, 
+            "int_field": 1, 
+            "string_field": "that in", 
+            "date_field": "2017-02-14"
+        }
+    }, 
+    {
+        "pk": 20, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 20.2, 
+            "int_field": -300, 
+            "string_field": "of in", 
+            "date_field": "2000-10-10"
+        }
+    }, 
+    {
+        "pk": 21, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 30.77, 
+            "int_field": 200, 
+            "string_field": "of that Django", 
+            "date_field": "2000-10-10"
+        }
+    }, 
+    {
+        "pk": 22, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 30.77, 
+            "int_field": 10, 
+            "string_field": "of writing", 
+            "date_field": "2017-05-20"
+        }
+    }, 
+    {
+        "pk": 23, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": -10.4, 
+            "int_field": -20, 
+            "string_field": "tools small", 
+            "date_field": "2000-10-10"
+        }
+    }, 
+    {
+        "pk": 24, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 20.2, 
+            "int_field": -10, 
+            "string_field": "when provides that", 
+            "date_field": "2017-06-08"
+        }
+    }, 
+    {
+        "pk": 25, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 20.4, 
+            "int_field": 20, 
+            "string_field": "writing come", 
+            "date_field": "2009-03-03"
+        }
+    }, 
+    {
+        "pk": 26, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": -10.4, 
+            "int_field": 20, 
+            "string_field": "of handy", 
+            "date_field": "2017-06-07"
+        }
+    }, 
+    {
+        "pk": 27, 
+        "model": "tests.TestModel", 
+        "fields": {
+            "float_field": 30.77, 
+            "int_field": 10, 
+            "string_field": "of provides handy", 
+            "date_field": "2000-10-10"
+        }
+    }
+]
