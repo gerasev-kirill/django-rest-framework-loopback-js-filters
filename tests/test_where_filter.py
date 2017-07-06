@@ -485,7 +485,7 @@ class RelationsWhereTest(TestCase):
         )
 
         ##
-        #  neq
+        #  nlike
         ##
         pfilter = ProcessWhereFilter(self.queryset, {
             'foreign_field.username': {
