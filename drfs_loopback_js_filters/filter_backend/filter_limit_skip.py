@@ -40,7 +40,7 @@ class ProcessLimitSkipFilter:
                     "Parameter for '"+property+"' filter should be positive number or zero"
                 )
 
-        if property == 'limit' and limit == 0:
+        if property == 'limit' and value == 0:
             raise exceptions.NotAcceptable(
                 "Parameter for 'limit' filter should be greater than zero"
             )
