@@ -1,5 +1,5 @@
 from django.core import exceptions as djExceptions
-from rest_framework import exceptions
+from rest_framework.exceptions import ParseError, NotAcceptable
 from django.db.models import Q
 
 
@@ -8,9 +8,19 @@ from django.db.models import Q
 
 
 
-
-
 class ProcessWhereFilter:
+    error_msgs = {
+        'invalid_type': "Parameter '{property}' expected to be <type 'dict'>, got - {type}",
+        'invalid_type_for_operator': "Value for operator '{operator}' for parameter '{property}' expected to be {expected_types}, got - {type}",
+        'invalid_type_for_property': "Value for property '{property}' expected to be {expected_types}, got - {type}",
+        'invalid_type_for_property_with_operator': "Value for property '{property}' with operator '{operator}' expected to be {expected_types}, got - {type}",
+        'unknown_operator_for_property': "Unknown operator '{operator}' for property '{property}' for 'where' filter",
+
+        'no_related_model_field': "To filter queryset against related model '{model_name}' use '{property}.some_field' instead of '{property}'",
+        'field_doesnt_exist': "Field '{property}' for model '{model_name}' does't exists. You can't use 'where' filter",
+        'field_validation_fail': "Field '{property}' validation error: {error}"
+    }
+
     def __init__(self, queryset, _where):
         self.model_fields = queryset.model._meta.get_fields()
         self.queryset = queryset
@@ -20,28 +30,37 @@ class ProcessWhereFilter:
 
     def filter_queryset(self):
         if not isinstance(self.where, dict):
-            raise exceptions.ParseError(
-                "Parameter 'where' expected to be <type 'dict'>, got - " + str(type(self.where))
-            )
+            raise ParseError(self.error_msgs['invalid_type'].format(
+                property='where',
+                type=type(self.where)
+            ))
 
         q = Q()
 
-        if 'or' in self.where.keys():
+        if self.where.has_key('or'):
             if not isinstance(self.where['or'], list):
-                raise exceptions.ParseError(
-                    "Parameter 'or' for parameter 'where' expected to be <type 'array'>, got - " + str(type(self.where['or']))
-                )
+                raise ParseError(self.error_msgs['invalid_type_for_operator'].format(
+                    operator='or',
+                    property='where',
+                    expected_types="<type 'array'>",
+                    type=type(self.where['or'])
+                ))
             for v in self.where['or']:
                 q |= self.generate_rawq(v)
-        elif 'and' in self.where.keys():
+
+        elif self.where.has_key('and'):
             if not isinstance(self.where['and'], list):
-                raise exceptions.ParseError(
-                    "Parameter for 'and' operator expected to be <type 'array'>, got - "+str(type(self.where['and']))
-                )
+                raise ParseError(self.error_msgs['invalid_type_for_operator'].format(
+                    operator='and',
+                    property='where',
+                    expected_types="<type 'array'>",
+                    type=type(self.where['and'])
+                ))
             _q = {}
             for o in self.where['and']:
                 _q.update(o)
             q = self.generate_rawq(_q)
+
         else:
             q = self.generate_rawq(self.where)
 
@@ -66,9 +85,10 @@ class ProcessWhereFilter:
                         break
                     elif related_model and not _property_path:
                         # can't query by related_model and not by field
-                        raise exceptions.NotAcceptable(
-                            "To filter queryset against related model '"+related_model.__name__+"' use '"+property+".some_field' instead '"+property+"'"
-                        )
+                        raise NotAcceptable(self.error_msgs['no_related_model_field'].format(
+                            model_name=related_model.__name__,
+                            property=property
+                        ))
                     elif not related_model:
                         # regular field
                         field_instance = field
@@ -85,12 +105,18 @@ class ProcessWhereFilter:
     def validate_value(self, property, value):
         field_instance, normalized_property = self.get_field_by_path(property)
         if not field_instance:
-            raise exceptions.ParseError("Field '"+property+"' for model '"+self.model_name+"' does't exists. You can't use where filter")
+            raise ParseError(self.error_msgs['field_doesnt_exist'].format(
+                property=property,
+                model_name=self.model_name
+            ))
 
         try:
             value = field_instance.to_python(value)
         except djExceptions.ValidationError as e:
-            raise exceptions.ParseError("Field '"+property+"' validation error: "+str(e))
+            raise ParseError(self.error_msgs['field_validation_fail'].format(
+                property=property,
+                error=e
+            ))
         return normalized_property, value
 
 
@@ -125,25 +151,41 @@ class ProcessWhereFilter:
 
     def _between(self, q, property, value):
         if not isinstance(value, list):
-            raise exceptions.ParseError(
-                "Parameter for property '"+property+"' with operator 'between' expected to be <type 'array'>, got - "+str(type(value))
-            )
+            raise ParseError(self.error_msgs['invalid_type_for_property_with_operator'].format(
+                property=property,
+                operator='between',
+                expected_types="<type 'array'>",
+                type=type(value)
+            ))
         if len(value)!=2:
-            raise exceptions.ParseError(
-                "Parameter for property '"+property+"' with operator 'between' expected to be <type 'array'> with 2 elements. Got "+str(len(value))+" elements"
-            )
+            raise ParseError(self.error_msgs['invalid_type_for_property_with_operator'].format(
+                property=property,
+                operator='between',
+                expected_types="<type 'array'> with 2 elements",
+                type=str(len(value))+" elements"
+            ))
         q['filter'][property+'__gte'] = value[0]
         q['filter'][property+'__lte'] = value[1]
 
     def _inq(self, q, property, value):
         if not isinstance(value, list):
-            raise exceptions.ParseError("Parameter for property '"+property+"' with operator 'inq' expected to be <type 'array'>, got - "+str(type(value)))
+            raise ParseError(self.error_msgs['invalid_type_for_property_with_operator'].format(
+                property=property,
+                operator='inq',
+                expected_types="<type 'array'>",
+                type=type(value)
+            ))
         if value:
             q['filter'][property+'__in'] = value
 
     def _nin(self, q, property, value):
         if not isinstance(value, list):
-            raise exceptions.ParseError("Parameter for property '"+property+"' with operator 'nin' expected to be <type 'array'>, got - "+str(type(value)))
+            raise ParseError(self.error_msgs['invalid_type_for_property_with_operator'].format(
+                property=property,
+                operator='nin',
+                expected_types="<type 'array'>",
+                type=type(value)
+            ))
         if value:
             q['exclude'][property+'__in'] = value
 
@@ -163,21 +205,33 @@ class ProcessWhereFilter:
         q['exclude'][property+'__icontains'] = value
 
 
+
     def lb_query_to_rawq(self, property, data):
-        q = {'filter':{}, 'exclude':{}}
+        q = {
+            'filter':{},
+            'exclude':{}
+        }
         if isinstance(data, (unicode, str, bool, int, float)) or data is None:
             property, data = self.validate_value(property, data)
             q['filter'][property] = data
             return q
+
         if not isinstance(data, dict):
-            raise exceptions.ParseError("Parameters for property '"+property+"' expected to be <type 'str'>, <type 'number'>, <type 'bool'> or <type 'dict'>, got - " + str(type(data)))
+            raise ParseError(self.error_msgs['invalid_type_for_property'].format(
+                property=property,
+                expected_types="<type 'str'>, <type 'number'>, <type 'bool'> or <type 'dict'>",
+                type=type(data)
+            ))
 
         field_instance, normalized_property = self.get_field_by_path(property)
 
-        for k,v in data.items():
-            func = getattr(self, '_' + k, None)
-            if not func:
-                raise exceptions.ParseError("Unknown parameter '"+k+"' for property '"+property+"' for 'where' filter")
-            func(q, normalized_property, v)
+        for operator,value in data.items():
+            operator_func = getattr(self, '_' + operator, None)
+            if not operator_func:
+                raise ParseError(self.error_msgs['unknown_operator_for_property'].format(
+                    property=property,
+                    operator=operator
+                ))
+            operator_func(q, normalized_property, value)
 
         return q

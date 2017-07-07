@@ -1,7 +1,7 @@
-from rest_framework import exceptions
+from rest_framework.exceptions import NotAcceptable, ParseError
 
 
-SORT_TYPES = {
+ORDER_TYPES = {
     'ASC': '',
     'DESC': '-'
 }
@@ -11,6 +11,12 @@ SORT_TYPES = {
 
 
 class ProcessOrderFilter:
+    error_msgs = {
+        'invalid_type': "Parameter for 'order' filter should be <type 'str'>, got - {type}",
+        'malformed_order': "Malformed parameter for 'order' filter. See https://loopback.io/doc/en/lb2/Order-filter.html",
+        'invalid_field_name': "Field '{field_name}' for model '{model_name}' does't exists. You can't use order filter"
+    }
+
     def __init__(self, queryset, _order):
         self.order = _order
         self.model_fields = queryset.model._meta.get_fields()
@@ -20,26 +26,23 @@ class ProcessOrderFilter:
 
     def filter_queryset(self):
         if self.order:
-            self.validate_value(self.order)
-            field_name, sort_type = self.order.split(' ')
-            sort_type = SORT_TYPES[sort_type]
-            return self.queryset.order_by(sort_type+field_name)
-
+            order = self.validate_value(self.order)
+            return self.queryset.order_by(order)
         return self.queryset
 
 
     def validate_value(self, value):
-        if not isinstance(value, str) and not isinstance(value, unicode):
-            raise exceptions.NotAcceptable("Parameter for 'order' filter should be <type 'str'>, got - "+str(type(value)))
+        if not isinstance(value, (str, unicode)):
+            raise NotAcceptable(self.error_msgs['invalid_type'].format(
+                type=type(value)
+            ))
 
-        v = value.split(' ')
-        if len(v)!=2:
-            raise exceptions.ParseError("Malformed parameter for 'order' filter. See https://loopback.io/doc/en/lb2/Order-filter.html")
+        if len(value.split(' ')) != 2:
+            raise ParseError(self.error_msgs['malformed_order'])
 
-        order_field, order_type = v
-
-        if order_type not in SORT_TYPES.keys():
-            raise exceptions.ParseError("Malformed parameter for 'order' filter. See https://loopback.io/doc/en/lb2/Order-filter.html")
+        order_field, order_type = value.split(' ')
+        if order_type not in ORDER_TYPES.keys():
+            raise ParseError(self.error_msgs['malformed_order'])
 
         field_exists = False
         for p in self.model_fields:
@@ -48,4 +51,9 @@ class ProcessOrderFilter:
                 break
 
         if not field_exists:
-            raise exceptions.ParseError("Field '"+order_field+"' for model '"+self.model_name+"' does't exists. You can't use order filter")
+            raise ParseError(self.error_msgs['invalid_field_name'].format(
+                field_name=order_field,
+                model_name=self.model_name
+            ))
+
+        return ORDER_TYPES[order_type] + order_field

@@ -41,7 +41,7 @@ class InvalidWhereTest(TestCase):
         pfilter = ProcessWhereFilter(queryset, {'invalid_field': True})
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Field 'invalid_field' for model 'TestModel' does't exists. You can't use where filter",
+            "Field 'invalid_field' for model 'TestModel' does't exists. You can't use 'where' filter",
             pfilter.filter_queryset
         )
         pfilter = ProcessWhereFilter(queryset, {
@@ -52,7 +52,7 @@ class InvalidWhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Field 'invalid_field' for model 'TestModel' does't exists. You can't use where filter",
+            "Field 'invalid_field' for model 'TestModel' does't exists. You can't use 'where' filter",
             pfilter.filter_queryset
         )
         pfilter = ProcessWhereFilter(queryset, {
@@ -63,7 +63,7 @@ class InvalidWhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Field 'invalid_field4' for model 'TestModel' does't exists. You can't use where filter",
+            "Field 'invalid_field4' for model 'TestModel' does't exists. You can't use 'where' filter",
             pfilter.filter_queryset
         )
 
@@ -164,7 +164,7 @@ class WhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Parameter for property 'int_field' with operator 'between' expected to be <type 'array'>, got - <type 'int'>",
+            "Value for property 'int_field' with operator 'between' expected to be <type 'array'>, got - <type 'int'>",
             pfilter.filter_queryset
         )
 
@@ -175,7 +175,7 @@ class WhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Parameter for property 'int_field' with operator 'between' expected to be <type 'array'> with 2 elements. Got 1 elements",
+            "Value for property 'int_field' with operator 'between' expected to be <type 'array'> with 2 elements, got - 1 elements",
             pfilter.filter_queryset
         )
 
@@ -186,7 +186,7 @@ class WhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Parameter for property 'int_field' with operator 'between' expected to be <type 'array'> with 2 elements. Got 3 elements",
+            "Value for property 'int_field' with operator 'between' expected to be <type 'array'> with 2 elements, got - 3 elements",
             pfilter.filter_queryset
         )
 
@@ -230,7 +230,7 @@ class WhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Parameter for property 'int_field' with operator 'inq' expected to be <type 'array'>, got - <type 'int'>",
+            "Value for property 'int_field' with operator 'inq' expected to be <type 'array'>, got - <type 'int'>",
             pfilter.filter_queryset
         )
 
@@ -241,7 +241,7 @@ class WhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Parameter for property 'int_field' with operator 'nin' expected to be <type 'array'>, got - <type 'int'>",
+            "Value for property 'int_field' with operator 'nin' expected to be <type 'array'>, got - <type 'int'>",
             pfilter.filter_queryset
         )
 
@@ -382,7 +382,7 @@ class RelationsWhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Field 'foreign_field.invalid_field' for model 'TestModel' does't exists. You can't use where filter",
+            "Field 'foreign_field.invalid_field' for model 'TestModel' does't exists. You can't use 'where' filter",
             pfilter.filter_queryset
         )
 
@@ -391,7 +391,7 @@ class RelationsWhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Field 'foreign_field__invalid_field' for model 'TestModel' does't exists. You can't use where filter",
+            "Field 'foreign_field__invalid_field' for model 'TestModel' does't exists. You can't use 'where' filter",
             pfilter.filter_queryset
         )
 
@@ -400,7 +400,7 @@ class RelationsWhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.NotAcceptable,
-            "To filter queryset against related model 'User' use 'foreign_field.some_field' instead 'foreign_field'",
+            "To filter queryset against related model 'User' use 'foreign_field.some_field' instead of 'foreign_field'",
             pfilter.filter_queryset
         )
 

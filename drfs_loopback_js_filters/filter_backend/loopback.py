@@ -1,6 +1,6 @@
 from rest_framework.filters import BaseFilterBackend
 from django.core import exceptions as djExceptions
-from rest_framework import exceptions
+from rest_framework.exceptions import NotAcceptable, ParseError
 
 import json
 
@@ -12,7 +12,12 @@ from .filter_order import ProcessOrderFilter
 
 
 
+
 class LoopbackJsFilterBackend(BaseFilterBackend):
+    error_msgs = {
+        'malformed_json': "Malformed json string for query param '{param}'",
+        'both_filter_and_where': "Provide 'filter' OR 'where' query. Not both at the same time"
+    }
 
     def _filter_queryset(self, request, queryset, _filter):
         p = ProcessOrderFilter(queryset, _filter.get('order', None))
@@ -36,7 +41,7 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
         _filter = query.get('filter', None)
 
         if _where and _filter:
-            raise exceptions.NotAcceptable("Provide 'filter' OR 'where' query. Not both at the same time")
+            raise NotAcceptable(self.error_msgs['both_filter_and_where'])
         if not _filter and not _where:
             return queryset
 
@@ -44,13 +49,17 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
             try:
                 _filter = json.loads(_filter)
             except:
-                raise exceptions.ParseError("Malformed json string for query param 'filter'")
+                raise ParseError(self.error_msgs['malformed_json'].format(
+                    param='filter'
+                ))
         elif _where:
             try:
                 _where = json.loads(_where)
                 _filter = {'where': _where}
             except:
-                raise exceptions.ParseError("Malformed json string for query param 'where'")
+                raise ParseError(self.error_msgs['malformed_json'].format(
+                    param='where'
+                ))
 
         return self._filter_queryset(request, queryset, _filter)
 
