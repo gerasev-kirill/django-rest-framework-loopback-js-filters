@@ -7,8 +7,8 @@ import json
 from .models import TestModel
 from .serializers import TestModelSetializer
 
-from drfs_loopback_js_filters.filter_backend.filter_fields import ProcessFieldsFilter
-from drfs_loopback_js_filters import LoopbackJsFilterBackend
+from drf_loopback_js_filters.filter_backend.filter_fields import ProcessFieldsFilter
+from drf_loopback_js_filters import LoopbackJsFilterBackend
 
 
 

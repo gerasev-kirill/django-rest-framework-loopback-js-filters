@@ -3,14 +3,14 @@ install_virtualenv:
 	virtualenv .virtualenv/p2
 	chmod +x .virtualenv/p2/bin/activate
 	ln -s .virtualenv/p2/bin/activate ap2 || true
-	bash ./pip_pkg_install.sh
+	bash -c "source ap2; pip2 install -r ./requirements.django.txt"
 
 install_virtualenv3:
 	rm -fr .virtualenv/p3 || true
 	virtualenv -p python3 .virtualenv/p3
 	chmod +x .virtualenv/p3/bin/activate
 	ln -s .virtualenv/p3/bin/activate ap3 || true
-	bash ./pip_pkg_install3.sh
+	bash -c "source ap3; pip3 install -r ./requirements.django.txt"
 
 
 run_tests:

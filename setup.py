@@ -8,8 +8,8 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-rest-loopback-js-filters',
-    version='1.0.0',
-    packages=['drfs'],
+    version='1.1.0',
+    packages=['drf_loopback_js_filters'],
     include_package_data=True,
     license='BSD License',
     description='A loopback.Js-like system for filtering Django Rest Framework QuerySets based on user selections',

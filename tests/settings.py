@@ -19,7 +19,7 @@ INSTALLED_APPS=(
     'django.contrib.sessions',
     'rest_framework',
     'rest_framework.authtoken',
-    'drfs_loopback_js_filters',
+    'drf_loopback_js_filters',
 
     'tests'
 )

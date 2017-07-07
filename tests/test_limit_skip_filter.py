@@ -1,7 +1,7 @@
 from django.test import TestCase
 from rest_framework import exceptions
 
-from drfs_loopback_js_filters.filter_backend.filter_limit_skip import ProcessLimitSkipFilter
+from drf_loopback_js_filters.filter_backend.filter_limit_skip import ProcessLimitSkipFilter
 
 from .fake_request import FakeRequest
 
