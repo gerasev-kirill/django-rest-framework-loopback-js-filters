@@ -7,3 +7,4 @@ ap2
 .*
 /key.json
 !.gitignore
+!.travis.yml

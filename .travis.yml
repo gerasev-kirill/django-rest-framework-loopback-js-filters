@@ -1,0 +1,16 @@
+language: python
+
+sudo: false
+
+python:
+  - "2.7"
+  - "3.3"
+
+env:
+  - DJANGO_VERSION=1.11.0
+
+install:
+  - travis_retry pip install detox tox-travis coverage
+  - pip install djangorestframework==3.6.3
+
+script: python ./runtests.py
