@@ -19,7 +19,7 @@ class TestModelViewSet(viewsets.ModelViewSet):
 
 
 
-
+ERROR_MSGS = ProcessFieldsFilter.error_msgs
 
 
 
@@ -59,7 +59,11 @@ class FieldsTest(TestCase):
         pfilter = ProcessFieldsFilter(request, self.queryset, filter)
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Filter 'fields' should to be <type 'dict'>, got - <type 'int'>",
+            ERROR_MSGS['invalid_type'].format(
+                property='fields',
+                expected_types="<type 'dict'>",
+                type=type(1)
+            ),
             pfilter.filter_queryset,
         )
 
@@ -71,7 +75,11 @@ class FieldsTest(TestCase):
         pfilter = ProcessFieldsFilter(request, self.queryset, filter)
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Filter 'id' should to be <type 'bool'>, got - <type 'int'>",
+            ERROR_MSGS['invalid_type_for_property'].format(
+                property='id',
+                expected_types="<type 'bool'>",
+                type=type(1)
+            ),
             pfilter.filter_queryset,
         )
 
@@ -83,7 +91,7 @@ class FieldsTest(TestCase):
         pfilter = ProcessFieldsFilter(request, self.queryset, filter)
         self.assertRaisesMessage(
             exceptions.NotAcceptable,
-            "For properties in filter 'fields' you can use true OR false value. Not both at the same time",
+            ERROR_MSGS['both_true_and_false'],
             pfilter.filter_queryset,
         )
 

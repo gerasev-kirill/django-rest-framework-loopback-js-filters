@@ -15,7 +15,7 @@ from .filter_order import ProcessOrderFilter
 
 class LoopbackJsFilterBackend(BaseFilterBackend):
     error_msgs = {
-        'malformed_json': "Malformed json string for query param '{param}'",
+        'malformed_json': "Malformed json string for query param '{property}'",
         'both_filter_and_where': "Provide 'filter' OR 'where' query. Not both at the same time"
     }
 
@@ -49,7 +49,7 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
                 _filter = json.loads(_filter)
             except:
                 raise ParseError(self.error_msgs['malformed_json'].format(
-                    param='filter'
+                    property='filter'
                 ))
         elif _where:
             try:
@@ -57,7 +57,7 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
                 _filter = {'where': _where}
             except:
                 raise ParseError(self.error_msgs['malformed_json'].format(
-                    param='where'
+                    property='where'
                 ))
 
         return self._filter_queryset(request, queryset, _filter)

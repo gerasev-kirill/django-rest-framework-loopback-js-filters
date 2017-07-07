@@ -6,7 +6,7 @@ from django.contrib.auth.models import User as UserModel
 from drfs_loopback_js_filters.filter_backend.filter_where import ProcessWhereFilter
 
 from .fake_request import FakeRequest
-
+ERROR_MSGS = ProcessWhereFilter.error_msgs
 
 
 
@@ -34,16 +34,23 @@ class InvalidWhereTest(TestCase):
         pfilter = ProcessWhereFilter(queryset, None)
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Filter 'where' should be <type 'dict'>, got - <type 'NoneType'>",
+            ERROR_MSGS['invalid_type'].format(
+                property='where',
+                type=type(None)
+            ),
             pfilter.filter_queryset
         )
 
         pfilter = ProcessWhereFilter(queryset, {'invalid_field': True})
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Field 'invalid_field' for model 'TestModel' does't exists. You can't use 'where' filter",
+            ERROR_MSGS['field_doesnt_exist'].format(
+                property='invalid_field',
+                model_name='TestModel'
+            ),
             pfilter.filter_queryset
         )
+
         pfilter = ProcessWhereFilter(queryset, {
             'or': [
                 {'invalid_field': True},
@@ -52,9 +59,13 @@ class InvalidWhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Field 'invalid_field' for model 'TestModel' does't exists. You can't use 'where' filter",
+            ERROR_MSGS['field_doesnt_exist'].format(
+                property='invalid_field',
+                model_name='TestModel'
+            ),
             pfilter.filter_queryset
         )
+
         pfilter = ProcessWhereFilter(queryset, {
             'and': [
                 {'invalid_field3': True},
@@ -63,7 +74,10 @@ class InvalidWhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Field 'invalid_field4' for model 'TestModel' does't exists. You can't use 'where' filter",
+            ERROR_MSGS['field_doesnt_exist'].format(
+                property='invalid_field4',
+                model_name='TestModel'
+            ),
             pfilter.filter_queryset
         )
 
@@ -164,7 +178,12 @@ class WhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Value for property 'int_field' with operator 'between' expected to be <type 'array'>, got - <type 'int'>",
+            ERROR_MSGS['invalid_type_for_property_with_operator'].format(
+                property='int_field',
+                operator='between',
+                expected_types="<type 'array'>",
+                type=type(1)
+            ),
             pfilter.filter_queryset
         )
 
@@ -175,7 +194,12 @@ class WhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Value for property 'int_field' with operator 'between' expected to be <type 'array'> with 2 elements, got - 1 elements",
+            ERROR_MSGS['invalid_type_for_property_with_operator'].format(
+                property='int_field',
+                operator='between',
+                expected_types="<type 'array'> with 2 elements",
+                type='1 elements'
+            ),
             pfilter.filter_queryset
         )
 
@@ -186,7 +210,12 @@ class WhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Value for property 'int_field' with operator 'between' expected to be <type 'array'> with 2 elements, got - 3 elements",
+            ERROR_MSGS['invalid_type_for_property_with_operator'].format(
+                property='int_field',
+                operator='between',
+                expected_types="<type 'array'> with 2 elements",
+                type='3 elements'
+            ),
             pfilter.filter_queryset
         )
 
@@ -230,7 +259,12 @@ class WhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Value for property 'int_field' with operator 'inq' expected to be <type 'array'>, got - <type 'int'>",
+            ERROR_MSGS['invalid_type_for_property_with_operator'].format(
+                property='int_field',
+                operator='inq',
+                expected_types="<type 'array'>",
+                type=type(1)
+            ),
             pfilter.filter_queryset
         )
 
@@ -241,7 +275,12 @@ class WhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Value for property 'int_field' with operator 'nin' expected to be <type 'array'>, got - <type 'int'>",
+            ERROR_MSGS['invalid_type_for_property_with_operator'].format(
+                property='int_field',
+                operator='nin',
+                expected_types="<type 'array'>",
+                type=type(1)
+            ),
             pfilter.filter_queryset
         )
 
@@ -382,7 +421,10 @@ class RelationsWhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Field 'foreign_field.invalid_field' for model 'TestModel' does't exists. You can't use 'where' filter",
+            ERROR_MSGS['field_doesnt_exist'].format(
+                property='foreign_field.invalid_field',
+                model_name='TestModel'
+            ),
             pfilter.filter_queryset
         )
 
@@ -391,7 +433,10 @@ class RelationsWhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Field 'foreign_field__invalid_field' for model 'TestModel' does't exists. You can't use 'where' filter",
+            ERROR_MSGS['field_doesnt_exist'].format(
+                property='foreign_field__invalid_field',
+                model_name='TestModel'
+            ),
             pfilter.filter_queryset
         )
 
@@ -400,7 +445,10 @@ class RelationsWhereTest(TestCase):
         })
         self.assertRaisesMessage(
             exceptions.NotAcceptable,
-            "To filter queryset against related model 'User' use 'foreign_field.some_field' instead of 'foreign_field'",
+            ERROR_MSGS['no_related_model_field'].format(
+                property='foreign_field',
+                model_name='User',
+            ),
             pfilter.filter_queryset
         )
 

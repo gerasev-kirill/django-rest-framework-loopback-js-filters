@@ -7,7 +7,7 @@ from .fake_request import FakeRequest
 
 
 
-
+ERROR_MSGS = LoopbackJsFilterBackend.error_msgs
 
 
 
@@ -20,7 +20,7 @@ class ParserTest(TestCase):
 
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Malformed json string for query param 'filter'",
+            ERROR_MSGS['malformed_json'].format(property='filter'),
             self.backend.filter_queryset,
 
             request, None, None
@@ -32,7 +32,7 @@ class ParserTest(TestCase):
 
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Malformed json string for query param 'where'",
+            ERROR_MSGS['malformed_json'].format(property='where'),
             self.backend.filter_queryset,
 
             request, None, None
@@ -44,7 +44,7 @@ class ParserTest(TestCase):
 
         self.assertRaisesMessage(
             exceptions.NotAcceptable,
-            "Provide 'filter' OR 'where' query. Not both at the same time",
+            ERROR_MSGS['both_filter_and_where'],
             self.backend.filter_queryset,
 
             request, None, None

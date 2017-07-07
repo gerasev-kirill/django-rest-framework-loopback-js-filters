@@ -7,7 +7,7 @@ from .fake_request import FakeRequest
 
 
 
-
+ERROR_MSGS = ProcessLimitSkipFilter.error_msgs
 
 
 
@@ -31,32 +31,38 @@ class LimitSkipTest(TestCase):
         pfilter = ProcessLimitSkipFilter(self.queryset, {'skip': 1.1})
         self.assertRaisesMessage(
             exceptions.NotAcceptable,
-            "Parameter for 'skip' filter should be <type 'int'>, got - <type 'float'>",
+            ERROR_MSGS['invalid_type'].format(
+                property='skip',
+                type=type(1.1)
+            ),
             pfilter.filter_queryset
         )
         pfilter = ProcessLimitSkipFilter(self.queryset, {'skip': -1})
         self.assertRaisesMessage(
             exceptions.NotAcceptable,
-            "Parameter for 'skip' filter should be positive number or zero",
+            ERROR_MSGS['less_than_zero'].format(property='skip'),
             pfilter.filter_queryset
         )
 
         pfilter = ProcessLimitSkipFilter(self.queryset, {'limit': 1.1})
         self.assertRaisesMessage(
             exceptions.NotAcceptable,
-            "Parameter for 'limit' filter should be <type 'int'>, got - <type 'float'>",
+            ERROR_MSGS['invalid_type'].format(
+                property='limit',
+                type=type(1.1)
+            ),
             pfilter.filter_queryset
         )
         pfilter = ProcessLimitSkipFilter(self.queryset, {'limit': -1})
         self.assertRaisesMessage(
             exceptions.NotAcceptable,
-            "Parameter for 'limit' filter should be positive number or zero",
+            ERROR_MSGS['less_than_zero'].format(property='limit'),
             pfilter.filter_queryset
         )
         pfilter = ProcessLimitSkipFilter(self.queryset, {'limit': 0})
         self.assertRaisesMessage(
             exceptions.NotAcceptable,
-            "Parameter for 'limit' filter should be greater than zero",
+            ERROR_MSGS['limit_is_zero'],
             pfilter.filter_queryset
         )
 

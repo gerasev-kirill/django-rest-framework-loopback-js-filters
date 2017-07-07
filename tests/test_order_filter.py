@@ -4,7 +4,7 @@ from rest_framework import exceptions
 from drfs_loopback_js_filters.filter_backend.filter_order import ProcessOrderFilter
 
 from .fake_request import FakeRequest
-
+ERROR_MSGS = ProcessOrderFilter.error_msgs
 
 
 
@@ -33,21 +33,28 @@ class OrderTest(TestCase):
         pfilter = ProcessOrderFilter(queryset, 1)
         self.assertRaisesMessage(
             exceptions.NotAcceptable,
-            "Filter 'order' should be <type 'str'>, got - <type 'int'>",
+            ERROR_MSGS['invalid_type'].format(
+                property='order',
+                expected_types="<type 'str'>",
+                type=type(1)
+            ),
             pfilter.filter_queryset
         )
 
         pfilter = ProcessOrderFilter(queryset, "INVALID")
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Malformed parameter for 'order' filter. See https://loopback.io/doc/en/lb2/Order-filter.html",
+            ERROR_MSGS['malformed_order'],
             pfilter.filter_queryset
         )
 
         pfilter = ProcessOrderFilter(queryset, "invalid_field ASC")
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Field 'invalid_field' for model 'TestModel' does't exists. You can't use 'order' filter",
+            ERROR_MSGS['invalid_field_name'].format(
+                field_name='invalid_field',
+                model_name='TestModel'
+            ),
             pfilter.filter_queryset
         )
 

@@ -8,7 +8,7 @@ from rest_framework.exceptions import ParseError, NotAcceptable
 
 class ProcessFieldsFilter:
     error_msgs = {
-        'invalid_type': "Filter '{property}' should to be {expected_types}, got - {type}",
+        'invalid_type': "Filter '{property}' should be {expected_types}, got - {type}",
         'invalid_type_for_property': "Value for property '{property}' with 'fields' filter should be {expected_types}, got - {type}",
         'both_true_and_false': "For properties in filter 'fields' you can use true OR false value. Not both at the same time"
     }
@@ -36,7 +36,7 @@ class ProcessFieldsFilter:
         for field_name,value in fields.items():
             if field_name in self.model_fields:
                 if not isinstance(value, bool):
-                    raise ParseError(self.error_msgs['invalid_type'].format(
+                    raise ParseError(self.error_msgs['invalid_type_for_property'].format(
                         property=field_name,
                         expected_types="<type 'bool'>",
                         type=type(value)
