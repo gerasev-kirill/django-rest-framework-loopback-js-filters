@@ -75,7 +75,7 @@ class InvalidWhereTest(TestCase):
         self.assertRaisesMessage(
             exceptions.ParseError,
             ERROR_MSGS['field_doesnt_exist'].format(
-                property='invalid_field4',
+                property='invalid_field3',
                 model_name='TestModel'
             ),
             pfilter.filter_queryset

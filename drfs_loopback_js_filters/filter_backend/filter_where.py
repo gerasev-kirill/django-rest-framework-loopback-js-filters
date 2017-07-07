@@ -2,6 +2,7 @@ from django.core import exceptions as djExceptions
 from rest_framework.exceptions import ParseError, NotAcceptable
 from django.db.models import Q
 from django.utils import six
+from collections import OrderedDict
 
 
 SIMPLE_TYPES = tuple(
@@ -62,7 +63,7 @@ class ProcessWhereFilter:
                     expected_types="<type 'array'>",
                     type=type(self.where['and'])
                 ))
-            _q = {}
+            _q = OrderedDict()
             for o in self.where['and']:
                 _q.update(o)
             q = self.generate_rawq(_q)
