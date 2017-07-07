@@ -14,9 +14,9 @@ install:
   - pip install django==$DJANGO_VERSION --quiet
   - pip install djangorestframework==3.6.3  --quiet
 
-script: python ./manage.py test
+script:
+  - python ./manage.py test
+  - coverage run --source=tests ./manage.py test
 
 after_success:
-  - coverage run --source=tests ./manage.py test
-  - coverage report
-  - bash <(curl -s https://codecov.io/bash)
+  - coveralls
