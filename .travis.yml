@@ -14,7 +14,7 @@ install:
   - pip install django==$DJANGO_VERSION --quiet
   - pip install djangorestframework==3.6.3  --quiet
 
-script: python ./runtests.py
+script: python ./manage.py test
 
 after_success:
   - coverage run --source=tests ./manage.py test
