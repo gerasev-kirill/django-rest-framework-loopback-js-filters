@@ -10,8 +10,13 @@ env:
   - DJANGO_VERSION=1.11.0
 
 install:
-  - travis_retry pip install detox tox-travis coverage
+  - travis_retry pip install detox tox-travis coverage coveralls
   - pip install django==$DJANGO_VERSION --quiet
   - pip install djangorestframework==3.6.3  --quiet
 
 script: python ./runtests.py
+
+after_success:
+  - coverage run --source=tests ./manage.py test
+  - coverage report
+  - bash <(curl -s https://codecov.io/bash)
