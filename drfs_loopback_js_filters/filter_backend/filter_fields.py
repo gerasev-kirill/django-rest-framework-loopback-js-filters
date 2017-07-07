@@ -1,4 +1,4 @@
-from rest_framework import exceptions
+from rest_framework.exceptions import ParseError, NotAcceptable
 
 
 
@@ -7,8 +7,15 @@ from rest_framework import exceptions
 
 
 class ProcessFieldsFilter:
+    error_msgs = {
+        'invalid_type': "Filter '{property}' should to be {expected_types}, got - {type}",
+        'invalid_type_for_property': "Value for property '{property}' with 'fields' filter should be {expected_types}, got - {type}",
+        'both_true_and_false': "For properties in filter 'fields' you can use true OR false value. Not both at the same time"
+    }
+
     def __init__(self, request, queryset, _filter):
         self.queryset = queryset
+        self.request = request
         self.fields = _filter.get('fields', None)
         self.model_fields = [
             f.name
@@ -17,33 +24,42 @@ class ProcessFieldsFilter:
 
 
     def filter_queryset(self):
-        self.validate_value(self.fields)
+        fields = self.validate_value(self.fields)
+        if not fields:
+            return self.queryset
 
         lb = {
-            'only':[],
-            'defer':[]
+            'visible':[],
+            'hidden':[]
         }
 
-        for k,v in _fields.items():
-            if k in fields:
-                if v not in [True, False]:
-                    raise exceptions.ParseError("Property '"+k+"' for parameter 'fields' should be <type 'bool'>, got - "+str(type(v)))
-                if v:
-                    lb['only'].append(k)
+        for field_name,value in fields.items():
+            if field_name in self.model_fields:
+                if not isinstance(value, bool):
+                    raise ParseError(self.error_msgs['invalid_type'].format(
+                        property=field_name,
+                        expected_types="<type 'bool'>",
+                        type=type(value)
+                    ))
+                if value:
+                    lb['visible'].append(field_name)
                 else:
-                    lb['defer'].append(k)
+                    lb['hidden'].append(field_name)
 
-        if lb['only'] and lb['defer']:
-            raise exceptions.NotAcceptable("For properties in parameter 'fields' you can use true OR false value. Not both at the same time")
+        if lb['visible'] and lb['hidden']:
+            raise NotAcceptable(self.error_msgs['both_true_and_false'])
 
-        request.LB_FILTER_FIELDS = lb
+        self.request.LB_FILTER_FIELDS = lb
         return self.queryset
 
 
     def validate_value(self, value):
         if value is None:
-            return True
+            return None
         if not isinstance(value, dict):
-            raise exceptions.ParseError(
-                "Parameter 'fields' expected to be <type 'dict'>, got - " + str(type(value))
-            )
+            raise ParseError(self.error_msgs['invalid_type'].format(
+                property='fields',
+                expected_types="<type 'dict'>",
+                type=type(value)
+            ))
+        return value

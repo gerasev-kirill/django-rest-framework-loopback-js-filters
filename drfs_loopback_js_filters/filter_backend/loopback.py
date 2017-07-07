@@ -23,9 +23,8 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
         p = ProcessOrderFilter(queryset, _filter.get('order', None))
         queryset = p.filter_queryset()
 
-        if _filter.get('fields',None):
-            p = ProcessFieldsFilter(request, queryset, _filter['fields'])
-            queryset = p.filter_queryset()
+        p = ProcessFieldsFilter(request, queryset, _filter)
+        queryset = p.filter_queryset()
 
         if _filter.get('where', None):
             p = ProcessWhereFilter(queryset, _filter['where'])
@@ -73,7 +72,7 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
                     name='filter',
                     required=False,
                     location='query',
-                    description="Filter defining fields, where, include, order, offset, and limit"
+                    description="Stringified JSON filter defining fields, where, include, order, offset, and limit. See https://loopback.io/doc/en/lb2/Querying-data.html#using-stringified-json-in-rest-queries"
                 )
             ]
         except:
