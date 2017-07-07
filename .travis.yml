@@ -11,6 +11,7 @@ env:
 
 install:
   - travis_retry pip install detox tox-travis coverage
-  - pip install djangorestframework==3.6.3
+  - pip install django==$DJANGO_VERSION --quiet
+  - pip install djangorestframework==3.6.3  --quiet
 
 script: python ./runtests.py
