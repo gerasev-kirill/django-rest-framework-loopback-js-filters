@@ -1,11 +1,13 @@
 from rest_framework.exceptions import NotAcceptable, ParseError
-
+from django.utils import six
 
 ORDER_TYPES = {
     'ASC': '',
     'DESC': '-'
 }
-
+STRING_TYPES = tuple(
+    [six.text_type] + list(six.string_types)
+)
 
 
 
@@ -32,7 +34,7 @@ class ProcessOrderFilter:
 
 
     def validate_value(self, value):
-        if not isinstance(value, (str, unicode)):
+        if not isinstance(value, STRING_TYPES):
             raise NotAcceptable(self.error_msgs['invalid_type'].format(
                 property='order',
                 expected_types="<type 'str'>",

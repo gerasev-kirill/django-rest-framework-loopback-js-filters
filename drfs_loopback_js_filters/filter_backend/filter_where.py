@@ -1,8 +1,14 @@
 from django.core import exceptions as djExceptions
 from rest_framework.exceptions import ParseError, NotAcceptable
 from django.db.models import Q
+from django.utils import six
 
 
+SIMPLE_TYPES = tuple(
+    [ bool, float, six.text_type ] \
+    + list(six.string_types) \
+    + list(six.integer_types)
+)
 
 
 
@@ -37,7 +43,7 @@ class ProcessWhereFilter:
 
         q = Q()
 
-        if self.where.has_key('or'):
+        if 'or' in self.where:
             if not isinstance(self.where['or'], list):
                 raise ParseError(self.error_msgs['invalid_type_for_operator'].format(
                     operator='or',
@@ -48,7 +54,7 @@ class ProcessWhereFilter:
             for v in self.where['or']:
                 q |= self.generate_rawq(v)
 
-        elif self.where.has_key('and'):
+        elif 'and' in self.where:
             if not isinstance(self.where['and'], list):
                 raise ParseError(self.error_msgs['invalid_type_for_operator'].format(
                     operator='and',
@@ -211,7 +217,7 @@ class ProcessWhereFilter:
             'filter':{},
             'exclude':{}
         }
-        if isinstance(data, (unicode, str, bool, int, float)) or data is None:
+        if isinstance(data, SIMPLE_TYPES) or data is None:
             property, data = self.validate_value(property, data)
             q['filter'][property] = data
             return q
