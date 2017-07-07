@@ -34,7 +34,7 @@ class InvalidWhereTest(TestCase):
         pfilter = ProcessWhereFilter(queryset, None)
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Parameter 'where' expected to be <type 'dict'>, got - <type 'NoneType'>",
+            "Filter 'where' should be <type 'dict'>, got - <type 'NoneType'>",
             pfilter.filter_queryset
         )
 

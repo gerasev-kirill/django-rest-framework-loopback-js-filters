@@ -10,7 +10,7 @@ from django.db.models import Q
 
 class ProcessWhereFilter:
     error_msgs = {
-        'invalid_type': "Parameter '{property}' expected to be <type 'dict'>, got - {type}",
+        'invalid_type': "Filter '{property}' should be <type 'dict'>, got - {type}",
         'invalid_type_for_operator': "Value for operator '{operator}' for parameter '{property}' expected to be {expected_types}, got - {type}",
         'invalid_type_for_property': "Value for property '{property}' expected to be {expected_types}, got - {type}",
         'invalid_type_for_property_with_operator': "Value for property '{property}' with operator '{operator}' expected to be {expected_types}, got - {type}",

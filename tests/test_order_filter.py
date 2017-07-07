@@ -33,7 +33,7 @@ class OrderTest(TestCase):
         pfilter = ProcessOrderFilter(queryset, 1)
         self.assertRaisesMessage(
             exceptions.NotAcceptable,
-            "Parameter for 'order' filter should be <type 'str'>, got - <type 'int'>",
+            "Filter 'order' should be <type 'str'>, got - <type 'int'>",
             pfilter.filter_queryset
         )
 
@@ -47,7 +47,7 @@ class OrderTest(TestCase):
         pfilter = ProcessOrderFilter(queryset, "invalid_field ASC")
         self.assertRaisesMessage(
             exceptions.ParseError,
-            "Field 'invalid_field' for model 'TestModel' does't exists. You can't use order filter",
+            "Field 'invalid_field' for model 'TestModel' does't exists. You can't use 'order' filter",
             pfilter.filter_queryset
         )
 

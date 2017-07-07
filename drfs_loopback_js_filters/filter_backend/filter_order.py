@@ -12,9 +12,9 @@ ORDER_TYPES = {
 
 class ProcessOrderFilter:
     error_msgs = {
-        'invalid_type': "Parameter for 'order' filter should be <type 'str'>, got - {type}",
+        'invalid_type': "Filter '{property}' should be {expected_types}, got - {type}",
         'malformed_order': "Malformed parameter for 'order' filter. See https://loopback.io/doc/en/lb2/Order-filter.html",
-        'invalid_field_name': "Field '{field_name}' for model '{model_name}' does't exists. You can't use order filter"
+        'invalid_field_name': "Field '{field_name}' for model '{model_name}' does't exists. You can't use 'order' filter"
     }
 
     def __init__(self, queryset, _order):
@@ -34,6 +34,8 @@ class ProcessOrderFilter:
     def validate_value(self, value):
         if not isinstance(value, (str, unicode)):
             raise NotAcceptable(self.error_msgs['invalid_type'].format(
+                property='order',
+                expected_types="<type 'str'>",
                 type=type(value)
             ))
 
