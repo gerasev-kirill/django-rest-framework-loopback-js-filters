@@ -16,7 +16,7 @@ install:
 
 script:
   - python ./manage.py test
-  - coverage run --source=drfs_loopback_js_filters ./manage.py test
+  - coverage run --source=drf_loopback_js_filters ./manage.py test
 
 after_success:
   - coveralls

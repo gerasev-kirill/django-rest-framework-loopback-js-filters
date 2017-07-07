@@ -13,9 +13,9 @@ A loopback.Js-like system for filtering Django Rest Framework QuerySets based on
 Quick start
 -----------
 
-1. Add "drfs_loopback_js_filters" to your INSTALLED_APPS setting like this::
+1. Add "drf_loopback_js_filters" to your INSTALLED_APPS setting like this::
 
       INSTALLED_APPS = (
           ...
-          'drfs_loopback_js_filters',
+          'drf_loopback_js_filters',
       )

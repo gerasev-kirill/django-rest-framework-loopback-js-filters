@@ -1,6 +1,6 @@
 from .models import TestModel
 
-from drfs_loopback_js_filters.serializers import LoopbackJsModelSerializer
+from drf_loopback_js_filters.serializers import LoopbackJsModelSerializer
 
 
 

@@ -1,2 +1,2 @@
 include README.rst
-recursive-include drfs_loopback_js_filters/* *.py
+recursive-include drf_loopback_js_filters/* *.py

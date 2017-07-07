@@ -3,7 +3,7 @@ from rest_framework import exceptions
 from django.contrib.auth.models import User as UserModel
 
 
-from drfs_loopback_js_filters.filter_backend.filter_where import ProcessWhereFilter
+from drf_loopback_js_filters.filter_backend.filter_where import ProcessWhereFilter
 
 from .fake_request import FakeRequest
 ERROR_MSGS = ProcessWhereFilter.error_msgs
