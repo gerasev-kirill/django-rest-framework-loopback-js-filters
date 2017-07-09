@@ -91,6 +91,11 @@ class ProcessWhereFilter:
                         )
                         break
                     elif related_model and not _property_path:
+                        id_field = get_field(related_model._meta.get_fields(), ['id'])
+                        if id_field:
+                            # try to filter by id property
+                            return id_field
+                        # 'id' field doesn't exists??
                         # can't query by related_model and not by field
                         raise NotAcceptable(self.error_msgs['no_related_model_field'].format(
                             model_name=related_model.__name__,

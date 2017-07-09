@@ -441,17 +441,46 @@ class RelationsWhereTest(TestCase):
         )
 
         pfilter = ProcessWhereFilter(self.queryset, {
-            'foreign_field': 'some_val for invalid property path'
+            'foreign_field.no_such_field': 'some_val for invalid property path'
         })
         self.assertRaisesMessage(
-            exceptions.NotAcceptable,
-            ERROR_MSGS['no_related_model_field'].format(
-                property='foreign_field',
-                model_name='User',
+            exceptions.ParseError,
+            ERROR_MSGS['field_doesnt_exist'].format(
+                property='foreign_field.no_such_field',
+                model_name='TestModel',
             ),
             pfilter.filter_queryset
         )
 
+        pfilter = ProcessWhereFilter(self.queryset, {
+            'foreign_field': 'invalid value for id field'
+        })
+        self.assertRaisesMessage(
+            exceptions.ParseError,
+            "'invalid value for id field' value must be an integer.",
+            pfilter.filter_queryset
+        )
+
+    def test_filter_by_pk(self):
+        pfilter = ProcessWhereFilter(self.queryset, {
+            'foreign_field': self.user1.pk
+        })
+
+        filtered_queryset = pfilter.filter_queryset()
+        djfiltered_queryset = self.queryset.filter(foreign_field=self.user1)
+
+        self.assertEqual(
+            [o.pk for o in filtered_queryset],
+            [o.pk for o in djfiltered_queryset]
+        )
+        self.assertEqual(
+            filtered_queryset.count(),
+            1
+        )
+        self.assertNotEqual(
+            [o.pk for o in filtered_queryset],
+            [o.pk for o in self.queryset]
+        )
 
     def test_eq_neq_valid(self):
         ##
