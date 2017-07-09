@@ -52,8 +52,19 @@ class ProcessWhereFilter:
                     expected_types="<type 'array'>",
                     type=type(self.where['or'])
                 ))
-            for v in self.where['or']:
-                q |= self.generate_rawq(v)
+
+            for k,v in self.where.items():
+                if k=='or':
+                    orQ = Q()
+                    for orWhere in v:
+                        orQ |= self.generate_rawq(orWhere)
+                    q = q & orQ
+                    continue
+                djQ = self.lb_query_to_rawq(k, v)
+                if djQ['filter']:
+                    q &= Q(**djQ['filter'])
+                if djQ['exclude']:
+                    q &= ~Q(**djQ['exclude'])
 
         elif 'and' in self.where:
             if not isinstance(self.where['and'], list):

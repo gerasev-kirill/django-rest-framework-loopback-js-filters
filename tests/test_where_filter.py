@@ -1,7 +1,7 @@
 from django.test import TestCase
 from rest_framework import exceptions
 from django.contrib.auth.models import User as UserModel
-
+from django.db.models import Q
 
 from drf_loopback_js_filters.filter_backend.filter_where import ProcessWhereFilter
 
@@ -91,6 +91,30 @@ class WhereTest(TestCase):
     def setUp(self):
         from .models import TestModel
         self.queryset = TestModel.objects.all()
+
+    def test_or_complex(self):
+        where = {
+            'int_field': 1,
+            'or': [
+                {'date_field': '2017-06-08'},
+                {'date_field': '2009-03-03'}
+            ]
+        }
+
+        pfilter = ProcessWhereFilter(self.queryset, where)
+        filtered_queryset = pfilter.filter_queryset()
+
+        djfiltered_queryset = self.queryset.filter(int_field=1).filter(
+            Q(date_field='2017-06-08') | Q(date_field='2009-03-03')
+        )
+        self.assertEqual(
+            [o.pk for o in filtered_queryset],
+            [o.pk for o in djfiltered_queryset]
+        )
+        self.assertNotEqual(
+            [o.pk for o in filtered_queryset],
+            [o.pk for o in self.queryset]
+        )
 
 
     def test_eq_neq(self):
