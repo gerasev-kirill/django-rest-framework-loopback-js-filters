@@ -88,7 +88,7 @@ Installation
 
 .. code-block:: bash
 
-    pip install git+https://github.com/gerasev-kirill/django-rest-loopback-js-filters.git
+    pip install git+https://github.com/gerasev-kirill/django-rest-framework-loopback-js-filters.git
 
 
 Quick start

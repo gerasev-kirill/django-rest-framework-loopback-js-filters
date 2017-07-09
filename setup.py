@@ -7,8 +7,8 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name='django-rest-loopback-js-filters',
-    version='1.1.0',
+    name='django-rest-framework-loopback-js-filters',
+    version='1.1.1',
     packages=['drf_loopback_js_filters'],
     include_package_data=True,
     license='BSD License',
