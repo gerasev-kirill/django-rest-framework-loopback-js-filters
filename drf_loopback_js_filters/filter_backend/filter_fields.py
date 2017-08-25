@@ -34,17 +34,16 @@ class ProcessFieldsFilter:
         }
 
         for field_name,value in fields.items():
-            if field_name in self.model_fields:
-                if not isinstance(value, bool):
-                    raise ParseError(self.error_msgs['invalid_type_for_property'].format(
-                        property=field_name,
-                        expected_types="<type 'bool'>",
-                        type=type(value)
-                    ))
-                if value:
-                    lb['visible'].append(field_name)
-                else:
-                    lb['hidden'].append(field_name)
+            if not isinstance(value, bool):
+                raise ParseError(self.error_msgs['invalid_type_for_property'].format(
+                    property=field_name,
+                    expected_types="<type 'bool'>",
+                    type=type(value)
+                ))
+            if value:
+                lb['visible'].append(field_name)
+            else:
+                lb['hidden'].append(field_name)
 
         if lb['visible'] and lb['hidden']:
             raise NotAcceptable(self.error_msgs['both_true_and_false'])
