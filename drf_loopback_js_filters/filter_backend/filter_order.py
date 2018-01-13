@@ -50,7 +50,7 @@ class ProcessOrderFilter:
 
         field_exists = False
         for p in self.model_fields:
-            if p.name == order_field:
+            if p.name == order_field.split('__')[0]:
                 field_exists = True
                 break
 
