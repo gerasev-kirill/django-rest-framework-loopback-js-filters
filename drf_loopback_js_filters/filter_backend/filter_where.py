@@ -157,22 +157,22 @@ class ProcessWhereFilter:
 
 
 
-    def _default(self, q, property, key, value):
+    def _default(self, q, property, key, value, options=None):
         q['filter'][property+'__'+key] = value
 
-    def _gt(self, q, property, value):
+    def _gt(self, q, property, value, options=None):
         self._default(q, property, 'gt', value)
 
-    def _gte(self, q, property, value):
+    def _gte(self, q, property, value, options=None):
         self._default(q, property, 'gte', value)
 
-    def _lt(self, q, property, value):
+    def _lt(self, q, property, value, options=None):
         self._default(q, property, 'lt', value)
 
-    def _lte(self, q, property, value):
+    def _lte(self, q, property, value, options=None):
         self._default(q, property, 'lte', value)
 
-    def _between(self, q, property, value):
+    def _between(self, q, property, value, options=None):
         if not isinstance(value, list):
             raise ParseError(self.error_msgs['invalid_type_for_property_with_operator'].format(
                 property=property,
@@ -190,7 +190,7 @@ class ProcessWhereFilter:
         q['filter'][property+'__gte'] = value[0]
         q['filter'][property+'__lte'] = value[1]
 
-    def _inq(self, q, property, value):
+    def _inq(self, q, property, value, options=None):
         if not isinstance(value, list):
             raise ParseError(self.error_msgs['invalid_type_for_property_with_operator'].format(
                 property=property,
@@ -201,7 +201,7 @@ class ProcessWhereFilter:
         if value:
             q['filter'][property+'__in'] = value
 
-    def _nin(self, q, property, value):
+    def _nin(self, q, property, value, options=None):
         if not isinstance(value, list):
             raise ParseError(self.error_msgs['invalid_type_for_property_with_operator'].format(
                 property=property,
@@ -212,19 +212,25 @@ class ProcessWhereFilter:
         if value:
             q['exclude'][property+'__in'] = value
 
-    def _neq(self, q, property, value):
+    def _neq(self, q, property, value, options=None):
         q['exclude'][property] = value
 
-    def _like(self, q, property, value):
-        q['filter'][property+'__contains'] = value
+    def _like(self, q, property, value, options=None):
+        if options == 'i':
+            q['filter'][property+'__icontains'] = value
+        else:
+            q['filter'][property+'__contains'] = value
 
-    def _nlike(self, q, property, value):
-        q['exclude'][property+'__contains'] = value
+    def _nlike(self, q, property, value, options=None):
+        if options == 'i':
+            q['exclude'][property+'__icontains'] = value
+        else:
+            q['exclude'][property+'__contains'] = value
 
-    def _ilike(self, q, property, value):
+    def _ilike(self, q, property, value, options=None):
         q['filter'][property+'__icontains'] = value
 
-    def _nilike(self, q, property, value):
+    def _nilike(self, q, property, value, options=None):
         q['exclude'][property+'__icontains'] = value
 
 
@@ -249,12 +255,14 @@ class ProcessWhereFilter:
         field_instance, normalized_property = self.get_field_by_path(property)
 
         for operator,value in data.items():
+            if operator == 'options':
+                continue
             operator_func = getattr(self, '_' + operator, None)
             if not operator_func:
                 raise ParseError(self.error_msgs['unknown_operator_for_property'].format(
                     property=property,
                     operator=operator
                 ))
-            operator_func(q, normalized_property, value)
+            operator_func(q, normalized_property, value, options=data.get('options', None))
 
         return q
