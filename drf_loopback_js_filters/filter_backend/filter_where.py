@@ -16,6 +16,11 @@ SIMPLE_TYPES = tuple(
 def convert_value_to_python(field, value):
     if not value:
         return value
+    if isinstance(value, list):
+        return [
+            convert_value_to_python(field, v)
+            for v in value
+        ]
     if isinstance(field, djFields.DateField):
         return field.to_python(value.split('T')[0])
     return value
