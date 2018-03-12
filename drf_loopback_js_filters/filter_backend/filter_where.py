@@ -1,6 +1,6 @@
 from django.core import exceptions as djExceptions
 from rest_framework.exceptions import ParseError, NotAcceptable
-from django.db.models import Q
+from django.db.models import Q, fields as djFields
 from django.utils import six
 from collections import OrderedDict
 
@@ -13,6 +13,12 @@ SIMPLE_TYPES = tuple(
 
 
 
+def convert_value_to_python(field, value):
+    if not value:
+        return value
+    if isinstance(field, djFields.DateField):
+        return field.to_python(value.split('T')[0])
+    return value
 
 
 class ProcessWhereFilter:
@@ -263,6 +269,12 @@ class ProcessWhereFilter:
                     property=property,
                     operator=operator
                 ))
-            operator_func(q, normalized_property, value, options=data.get('options', None))
+            value = convert_value_to_python(field_instance, value)
+            operator_func(
+                q,
+                normalized_property,
+                value,
+                options=data.get('options', None)
+            )
 
         return q
