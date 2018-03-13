@@ -21,7 +21,8 @@ def convert_value_to_python(field, value):
             convert_value_to_python(field, v)
             for v in value
         ]
-    if isinstance(field, djFields.DateField):
+    # don't use isinstance here!
+    if field.__class__ == djFields.DateField:
         return field.to_python(value.split('T')[0])
     return value
 
@@ -281,5 +282,4 @@ class ProcessWhereFilter:
                 value,
                 options=data.get('options', None)
             )
-
         return q
