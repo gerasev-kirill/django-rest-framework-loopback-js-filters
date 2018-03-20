@@ -4,9 +4,10 @@ from django.contrib.auth.models import User as UserModel
 from django.db.models import Q
 
 from drf_loopback_js_filters.filter_backend.filter_where import ProcessWhereFilter
+from drf_loopback_js_filters.helpers import LbWhereQueryConverter
 
 from .fake_request import FakeRequest
-ERROR_MSGS = ProcessWhereFilter.error_msgs
+ERROR_MSGS = LbWhereQueryConverter.error_msgs
 
 
 
