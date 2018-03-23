@@ -3,6 +3,7 @@ from rest_framework.exceptions import ParseError, NotAcceptable
 from django.db.models import Q, fields as djFields
 from django.utils import six
 from collections import OrderedDict
+from django.db.models.fields.reverse_related import ManyToOneRel
 
 
 
@@ -24,8 +25,17 @@ def convert_value_to_python(field, value):
         ]
     # don't use isinstance here!
     if field.__class__ == djFields.DateField:
+        if value in [None, 'null', 'undefined']:
+            return None
         return field.to_python(value.split('T')[0])
     return value
+
+def is_m2m(f):
+    if getattr(f, 'is_relation', False) and getattr(f, 'm2m_field_name', None):
+        return True
+    if f.__class__ == ManyToOneRel:
+        return True
+    return False
 
 
 
@@ -52,6 +62,7 @@ class LbWhereQueryConverter(object):
         self.model_class = model_class
         self.model_fields = model_class._meta.get_fields()
         self.model_name = model_class.__name__
+        self.has_m2m_in_where = False
 
 
 
@@ -212,6 +223,16 @@ class LbWhereQueryConverter(object):
             'filter':{},
             'exclude':{}
         }
+
+        field_instance, normalized_property = self.get_field_by_path(property)
+        if is_m2m(field_instance):
+            self.has_m2m_in_where = True
+        if '__' in property:
+            for f in self.model_fields:
+                if f.name == property.split('__')[0] and is_m2m(f):
+                    self.has_m2m_in_where = True
+
+
         if isinstance(data, SIMPLE_TYPES) or data is None:
             property, data = self.validate_value(property, data)
             q['filter'][property] = data
@@ -224,7 +245,6 @@ class LbWhereQueryConverter(object):
                 type=type(data)
             ))
 
-        field_instance, normalized_property = self.get_field_by_path(property)
 
         for operator,value in data.items():
             if operator == 'options':

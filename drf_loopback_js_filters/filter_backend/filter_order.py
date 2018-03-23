@@ -24,6 +24,7 @@ class ProcessOrderFilter:
         self.model_fields = queryset.model._meta.get_fields()
         self.model_name = queryset.model.__name__
         self.queryset = queryset
+        self.order_field = None
 
 
     def filter_queryset(self):
@@ -32,6 +33,12 @@ class ProcessOrderFilter:
             return self.queryset.order_by(order)
         return self.queryset
 
+    def is_order_by_m2m(self):
+        if not self.order_field:
+            return False
+        if getattr(self.order_field, 'is_relation', False) and getattr(self.order_field, 'm2m_field_name', None):
+            return True
+        return False
 
     def validate_value(self, value):
         if not isinstance(value, STRING_TYPES):
@@ -48,13 +55,12 @@ class ProcessOrderFilter:
         if order_type not in ORDER_TYPES.keys():
             raise ParseError(self.error_msgs['malformed_order'])
 
-        field_exists = False
         for p in self.model_fields:
             if p.name == order_field.split('__')[0]:
-                field_exists = True
+                self.order_field = p
                 break
 
-        if not field_exists:
+        if not self.order_field:
             raise ParseError(self.error_msgs['invalid_field_name'].format(
                 field_name=order_field,
                 model_name=self.model_name

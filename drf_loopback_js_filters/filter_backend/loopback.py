@@ -1,5 +1,6 @@
 from rest_framework.filters import BaseFilterBackend
 from django.core import exceptions as djExceptions
+from django.db.models import Case, When
 from rest_framework.exceptions import NotAcceptable, ParseError
 
 import json
@@ -22,6 +23,7 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
     def _filter_queryset(self, request, queryset, _filter):
         p = ProcessOrderFilter(queryset, _filter.get('order', None))
         queryset = p.filter_queryset()
+        has_m2m = p.is_order_by_m2m()
 
         p = ProcessFieldsFilter(request, queryset, _filter)
         queryset = p.filter_queryset()
@@ -29,9 +31,26 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
         if _filter.get('where', None):
             p = ProcessWhereFilter(queryset, _filter['where'])
             queryset = p.filter_queryset()
+            has_m2m = has_m2m or p.has_m2m_in_where
 
         p = ProcessLimitSkipFilter(queryset, _filter)
-        return p.filter_queryset()
+        queryset = p.filter_queryset()
+
+        if not has_m2m:
+            return queryset
+        # Ordering by related field creates duplicates in resultant querysets
+        # https://code.djangoproject.com/ticket/18165
+        # https://stackoverflow.com/questions/13700200/django-remove-duplicate-objects-where-there-is-more-than-one-field-to-compare
+        # WTF django??
+        base_queryset = queryset.model.objects.all()
+        ids = []
+
+        for id in queryset.values_list('id', flat=True):
+            if id not in ids:
+                ids.append(id)
+
+        preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
+        return base_queryset.filter(id__in=ids).order_by(preserved)
 
 
     def filter_queryset(self, request, queryset, view):
