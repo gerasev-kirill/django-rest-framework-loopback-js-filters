@@ -14,7 +14,7 @@ install_virtualenv3:
 
 
 run_tests:
-	bash -c "source ap2; python2 ./manage.py test"
+	bash -c "source ap2; python2 ./manage.py test tests.test_where_filter"
 
 run_tests3:
 	bash -c "source ap3; python3 ./manage.py test"

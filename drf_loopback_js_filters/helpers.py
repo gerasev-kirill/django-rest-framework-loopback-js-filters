@@ -234,6 +234,8 @@ class LbWhereQueryConverter(object):
 
 
         if isinstance(data, SIMPLE_TYPES) or data is None:
+            if property.startswith('$'):
+                return q
             property, data = self.validate_value(property, data)
             q['filter'][property] = data
             return q
@@ -247,7 +249,7 @@ class LbWhereQueryConverter(object):
 
 
         for operator,value in data.items():
-            if operator == 'options':
+            if operator == 'options' or operator.startswith('$'):
                 continue
             operator_func = getattr(self, '_' + operator, None)
             if not operator_func:
