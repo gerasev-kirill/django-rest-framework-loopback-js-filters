@@ -11,9 +11,11 @@ class LoopbackJsSerializerMixin(object):
 
         if lb_fields:
             if not isinstance(lb_fields, dict):
-                raise TypeError("LB_FILTER_FIELDS in request context should be 'dict'. Got '"+str(type(lb_fields))+"'")
+                raise TypeError(
+                    "LB_FILTER_FIELDS in request context should be 'dict'. Got '%s'" % type(lb_fields)
+                )
 
-            existing_fields = self.fields.keys()
+            existing_fields = list(self.fields.keys())
 
             if lb_fields.get('visible', None):
                 for name in existing_fields:
