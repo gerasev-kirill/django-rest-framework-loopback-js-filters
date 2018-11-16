@@ -2,6 +2,7 @@ from rest_framework.filters import BaseFilterBackend
 from django.core import exceptions as djExceptions
 from django.db.models import Case, When
 from rest_framework.exceptions import NotAcceptable, ParseError
+from django.db import connections
 
 import json
 
@@ -23,7 +24,8 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
     def _filter_queryset(self, request, queryset, _filter):
         p = ProcessOrderFilter(queryset, _filter.get('order', None))
         queryset = p.filter_queryset()
-        has_m2m = p.is_order_by_m2m()
+        has_m2m_in_order = p.is_order_by_m2m()
+        has_m2m_in_where = False
 
         p = ProcessFieldsFilter(request, queryset, _filter)
         queryset = p.filter_queryset()
@@ -31,22 +33,27 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
         if _filter.get('where', None):
             p = ProcessWhereFilter(queryset, _filter['where'])
             queryset = p.filter_queryset()
-            has_m2m = has_m2m or p.has_m2m_in_where
+            has_m2m_in_where = p.has_m2m_in_where
 
         p = ProcessLimitSkipFilter(queryset, _filter)
         queryset = p.filter_queryset()
 
-        if not has_m2m:
+        if not has_m2m_in_order and not has_m2m_in_where:
             return queryset
         # Ordering by related field creates duplicates in resultant querysets
         # https://code.djangoproject.com/ticket/18165
         # https://stackoverflow.com/questions/13700200/django-remove-duplicate-objects-where-there-is-more-than-one-field-to-compare
         # WTF django??
-        # return queryset.distinct()
-        base_queryset = queryset.model.objects.all()
+        if not has_m2m_in_order:
+            return queryset.distinct()
+        using = queryset.db
+        if connections[using].vendor not in ['sqlite', 'sqlite3']:
+            return queryset.distinct(queryset.model._meta.pk.name)
+        # we can't use distinct with fields
         ids = []
+        base_queryset = queryset.model.objects.all()
 
-        for id in queryset.values_list(queryset.model._meta.pk.name, flat=True):
+        for id in queryset.values_list(queryset.model._meta.pk.name, flat=True).iterator():
             if id not in ids:
                 ids.append(id)
 

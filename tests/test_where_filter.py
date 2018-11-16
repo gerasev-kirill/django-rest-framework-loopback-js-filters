@@ -685,13 +685,18 @@ class RelationsWhereTest(TestCase):
 
 
         request = FakeRequest(
-            where=json.dumps({
-                'm2m_field': {
-                    'inq': [self.user2.pk, self.user3.pk]
-                }
+            filter=json.dumps({
+                'where': {
+                    'm2m_field': {
+                        'inq': [self.user2.pk, self.user3.pk]
+                    }
+                },
+                'order': 'm2m_field DESC'
             })
         )
+        print self.queryset._db
         filtered_queryset = backend.filter_queryset(request, self.queryset, None)
+
         self.assertEqual(
             get_ids(filtered_queryset),
             get_unique(get_ids(filtered_queryset))
