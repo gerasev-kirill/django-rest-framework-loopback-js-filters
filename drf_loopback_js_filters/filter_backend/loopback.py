@@ -35,30 +35,33 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
             queryset = p.filter_queryset()
             has_m2m_in_where = p.has_m2m_in_where
 
-        p = ProcessLimitSkipFilter(queryset, _filter)
-        queryset = p.filter_queryset()
 
-        if not has_m2m_in_order and not has_m2m_in_where:
-            return queryset
         # Ordering by related field creates duplicates in resultant querysets
         # https://code.djangoproject.com/ticket/18165
         # https://stackoverflow.com/questions/13700200/django-remove-duplicate-objects-where-there-is-more-than-one-field-to-compare
         # WTF django??
-        if not has_m2m_in_order:
-            return queryset.distinct()
-        using = queryset.db
-        if connections[using].vendor not in ['sqlite', 'sqlite3']:
-            return queryset.distinct(queryset.model._meta.pk.name)
-        # we can't use distinct with fields
-        ids = []
-        base_queryset = queryset.model.objects.all()
+        if has_m2m_in_order or has_m2m_in_where:
+            using = queryset.db
+            if connections[using].vendor in ['sqlite', 'sqlite3']:
+                # we can't use distinct with fields in sqlite provider
+                if has_m2m_in_order:
+                    ids = []
+                    base_queryset = queryset.model.objects.all()
 
-        for id in queryset.values_list(queryset.model._meta.pk.name, flat=True).iterator():
-            if id not in ids:
-                ids.append(id)
+                    for id in queryset.values_list(queryset.model._meta.pk.name, flat=True).iterator():
+                        if id not in ids:
+                            ids.append(id)
 
-        preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
-        return base_queryset.filter(id__in=ids).order_by(preserved)
+                    preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
+                    queryset = base_queryset.filter(id__in=ids).order_by(preserved)
+                else:
+                    queryset = queryset.distinct()
+            else:
+                queryset = queryset.distinct(queryset.model._meta.pk.name)
+
+        p = ProcessLimitSkipFilter(queryset, _filter)
+        queryset = p.filter_queryset()
+        return queryset
 
 
     def filter_queryset(self, request, queryset, view):

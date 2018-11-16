@@ -694,7 +694,6 @@ class RelationsWhereTest(TestCase):
                 'order': 'm2m_field DESC'
             })
         )
-        print self.queryset._db
         filtered_queryset = backend.filter_queryset(request, self.queryset, None)
 
         self.assertEqual(
