@@ -71,7 +71,7 @@ class LbWhereQueryConverter(object):
     def get_field_by_path(self, property):
         def get_field(model_fields, _property_path):
             if not _property_path:
-                return None
+                return None, False
             field_instance = None
             property_name = _property_path.pop(0)
             for field in model_fields:
@@ -88,7 +88,7 @@ class LbWhereQueryConverter(object):
                         id_field = get_field(related_model._meta.get_fields(), ['id'])
                         if id_field:
                             # try to filter by id property
-                            return id_field
+                            return id_field, is_m2m(field)
                         # 'id' field doesn't exists??
                         # can't query by related_model and not by field
                         raise NotAcceptable(self.error_msgs['no_related_model_field'].format(
@@ -99,17 +99,18 @@ class LbWhereQueryConverter(object):
                         # regular field
                         field_instance = field
                         break
-            return field_instance
+            return field_instance, is_m2m(field_instance)
 
         _property = property.split('.')
         if len(_property) == 1:
             _property = property.split('__')
-        return get_field(self.model_fields, list(_property)), '__'.join(_property)
+        field, field_is_m2m = get_field(self.model_fields, list(_property))
+        return field, field_is_m2m , '__'.join(_property)
 
 
 
     def validate_value(self, property, value):
-        field_instance, normalized_property = self.get_field_by_path(property)
+        field_instance, m2m, normalized_property = self.get_field_by_path(property)
         if not field_instance:
             raise ParseError(self.error_msgs['field_doesnt_exist'].format(
                 property=property,
@@ -224,9 +225,7 @@ class LbWhereQueryConverter(object):
             'exclude':{}
         }
 
-        field_instance, normalized_property = self.get_field_by_path(property)
-        if is_m2m(field_instance):
-            self.has_m2m_in_where = True
+        field_instance, self.has_m2m_in_where, normalized_property = self.get_field_by_path(property)
         if '__' in normalized_property:
             for f in self.model_fields:
                 if f.name == normalized_property.split('__')[0] and is_m2m(f):
