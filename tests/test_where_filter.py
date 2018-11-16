@@ -2,9 +2,11 @@ from django.test import TestCase
 from rest_framework import exceptions
 from django.contrib.auth.models import User as UserModel
 from django.db.models import Q
+import json
 
 from drf_loopback_js_filters.filter_backend.filter_where import ProcessWhereFilter
 from drf_loopback_js_filters.helpers import LbWhereQueryConverter
+from drf_loopback_js_filters.filter_backend.loopback import LoopbackJsFilterBackend
 
 from .fake_request import FakeRequest
 ERROR_MSGS = LbWhereQueryConverter.error_msgs
@@ -610,4 +612,73 @@ class RelationsWhereTest(TestCase):
         self.assertNotEqual(
             [o.pk for o in filtered_queryset],
             [o.pk for o in self.queryset]
+        )
+
+
+class RelationsWhereTest(TestCase):
+    fixtures = ['TestModel.json']
+
+    def setUp(self):
+        from .models import TestModel
+        self.queryset = TestModel.objects.all()
+        self.user1 = UserModel.objects.create(username='user11')
+        self.user2 = UserModel.objects.create(username='user12')
+        self.user3 = UserModel.objects.create(username='test13')
+
+        obj = self.queryset[3]
+        obj.m2m_field.set([self.user1, self.user2])
+        obj.save()
+        obj = self.queryset[9]
+        obj.m2m_field.set([self.user2, self.user3])
+        obj.save()
+        obj = self.queryset[11]
+        obj.m2m_field.set([self.user3])
+        obj.save()
+        obj = self.queryset[15]
+        obj.m2m_field.set([self.user2])
+        obj.save()
+
+    def test_filter_by_m2m(self):
+        pfilter = ProcessWhereFilter(self.queryset, {
+            'm2m_field.username': {
+                'inq': ['user12', 'test13']
+            }
+        })
+        def get_ids(queryset):
+            ids = list(queryset.values_list('id', flat=True))
+            ids.sort()
+            return ids
+        def get_unique(ids):
+            ids = list(set(ids))
+            ids.sort()
+            return ids
+
+        filtered_queryset = pfilter.filter_queryset()
+        djfiltered_queryset = self.queryset.filter(m2m_field__username__in=['user12', 'test13'])
+        self.assertEqual(
+            get_ids(filtered_queryset),
+            get_ids(djfiltered_queryset)
+        )
+        # it should contains duplicates
+        self.assertNotEqual(
+            get_ids(filtered_queryset),
+            get_unique(get_ids(filtered_queryset))
+        )
+        # now test that we have queryset without duplicates
+        backend = LoopbackJsFilterBackend()
+        request = FakeRequest(
+            where=json.dumps({
+                'm2m_field.username': {
+                    'inq': ['user12', 'test13']
+                }
+            })
+        )
+        filtered_queryset = backend.filter_queryset(request, self.queryset, None)
+        self.assertEqual(
+            get_ids(filtered_queryset),
+            get_unique(get_ids(filtered_queryset))
+        )
+        self.assertEqual(
+            get_ids(filtered_queryset),
+            [4, 10, 12, 16]
         )

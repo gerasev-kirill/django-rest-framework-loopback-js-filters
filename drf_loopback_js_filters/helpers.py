@@ -227,9 +227,9 @@ class LbWhereQueryConverter(object):
         field_instance, normalized_property = self.get_field_by_path(property)
         if is_m2m(field_instance):
             self.has_m2m_in_where = True
-        if '__' in property:
+        if '__' in normalized_property:
             for f in self.model_fields:
-                if f.name == property.split('__')[0] and is_m2m(f):
+                if f.name == normalized_property.split('__')[0] and is_m2m(f):
                     self.has_m2m_in_where = True
 
 

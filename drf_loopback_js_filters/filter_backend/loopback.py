@@ -42,10 +42,11 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
         # https://code.djangoproject.com/ticket/18165
         # https://stackoverflow.com/questions/13700200/django-remove-duplicate-objects-where-there-is-more-than-one-field-to-compare
         # WTF django??
+        # return queryset.distinct()
         base_queryset = queryset.model.objects.all()
         ids = []
 
-        for id in queryset.values_list('id', flat=True):
+        for id in queryset.values_list(queryset.model._meta.pk.name, flat=True):
             if id not in ids:
                 ids.append(id)
 
