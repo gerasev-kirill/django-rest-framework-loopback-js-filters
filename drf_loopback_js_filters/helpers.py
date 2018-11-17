@@ -85,7 +85,7 @@ class LbWhereQueryConverter(object):
                         )
                         break
                     elif related_model and not _property_path:
-                        id_field = get_field(related_model._meta.get_fields(), ['id'])
+                        id_field, m2m = get_field(related_model._meta.get_fields(), ['id'])
                         if id_field:
                             # try to filter by id property
                             return id_field, is_m2m(field)
