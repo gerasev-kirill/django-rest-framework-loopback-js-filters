@@ -79,7 +79,7 @@ class LbWhereQueryConverter(object):
                     related_model = getattr(field, 'related_model', None)
                     if related_model and _property_path:
                         # relational field
-                        field_instance = get_field(
+                        field_instance, m2m = get_field(
                             related_model._meta.get_fields(),
                             _property_path
                         )
@@ -105,7 +105,7 @@ class LbWhereQueryConverter(object):
         if len(_property) == 1:
             _property = property.split('__')
         field, field_is_m2m = get_field(self.model_fields, list(_property))
-        return field, field_is_m2m , '__'.join(_property)
+        return field, field_is_m2m, '__'.join(_property)
 
 
 
