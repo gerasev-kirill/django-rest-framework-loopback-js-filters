@@ -41,6 +41,19 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
         # https://stackoverflow.com/questions/13700200/django-remove-duplicate-objects-where-there-is-more-than-one-field-to-compare
         # WTF django??
         if has_m2m_in_order or has_m2m_in_where:
+            if has_m2m_in_order:
+                ids = []
+                base_queryset = queryset.model.objects.all()
+
+                for id in queryset.values_list(queryset.model._meta.pk.name, flat=True).iterator():
+                    if id not in ids:
+                        ids.append(id)
+
+                preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
+                queryset = base_queryset.filter(id__in=ids).order_by(preserved)
+            else:
+                queryset = queryset.distinct()
+            '''
             using = queryset.db
             if connections[using].vendor in ['sqlite', 'sqlite3']:
                 # we can't use distinct with fields in sqlite provider
@@ -57,7 +70,8 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
                 else:
                     queryset = queryset.distinct()
             else:
-                queryset = queryset.distinct(queryset.model._meta.pk.name)
+                queryset = queryset.distinct()
+            '''
 
         p = ProcessLimitSkipFilter(queryset, _filter)
         queryset = p.filter_queryset()
