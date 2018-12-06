@@ -12,6 +12,8 @@ class ProcessWhereFilter:
         self.where = _where
         self.has_m2m_in_where = False
 
+    def is_where_with_m2m(self):
+        return getattr(self, 'has_m2m_in_where', False)
 
     def filter_queryset(self):
         converter = LbWhereQueryConverter(self.queryset.model, where=self.where)

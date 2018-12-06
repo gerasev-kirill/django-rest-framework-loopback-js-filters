@@ -1,6 +1,5 @@
 from rest_framework.filters import BaseFilterBackend
 from django.core import exceptions as djExceptions
-from django.db.models import Case, When
 from rest_framework.exceptions import NotAcceptable, ParseError
 from django.db import connections
 
@@ -33,13 +32,15 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
         if _filter.get('where', None):
             p = ProcessWhereFilter(queryset, _filter['where'])
             queryset = p.filter_queryset()
-            has_m2m_in_where = p.has_m2m_in_where
+            has_m2m_in_where = p.is_where_with_m2m()
 
 
         # Ordering by related field creates duplicates in resultant querysets
         # https://code.djangoproject.com/ticket/18165
-        # https://stackoverflow.com/questions/13700200/django-remove-duplicate-objects-where-there-is-more-than-one-field-to-compare
         # WTF django??
+        if has_m2m_in_where and not has_m2m_in_order:
+            queryset = queryset.distinct()
+        '''
         if has_m2m_in_order or has_m2m_in_where:
             if has_m2m_in_order:
                 ids = []
@@ -53,7 +54,7 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
                 queryset = base_queryset.filter(id__in=ids).order_by(preserved)
             else:
                 queryset = queryset.distinct()
-            '''
+            #
             using = queryset.db
             if connections[using].vendor in ['sqlite', 'sqlite3']:
                 # we can't use distinct with fields in sqlite provider
@@ -71,7 +72,7 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
                     queryset = queryset.distinct()
             else:
                 queryset = queryset.distinct()
-            '''
+        '''
 
         p = ProcessLimitSkipFilter(queryset, _filter)
         queryset = p.filter_queryset()

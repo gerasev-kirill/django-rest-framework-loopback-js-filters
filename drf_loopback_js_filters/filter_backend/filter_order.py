@@ -1,5 +1,7 @@
 from rest_framework.exceptions import NotAcceptable, ParseError
+from django.db.models import Max, Min
 from django.utils import six
+
 
 ORDER_TYPES = {
     'ASC': '',
@@ -8,6 +10,11 @@ ORDER_TYPES = {
 STRING_TYPES = tuple(
     [six.text_type] + list(six.string_types)
 )
+
+def get_field_name(order):
+    if order[0] == '-':
+        return order[1:], True
+    return order, False
 
 
 
@@ -28,10 +35,20 @@ class ProcessOrderFilter:
 
 
     def filter_queryset(self):
-        if self.order:
-            order = self.validate_value(self.order)
-            return self.queryset.order_by(order)
-        return self.queryset
+        if not self.order:
+            return self.queryset
+        order = self.validate_value(self.order)
+        fieldname, order_type = get_field_name(order)
+        if self.is_order_by_m2m():
+            # Ordering by related field creates duplicates in resultant querysets
+            # https://code.djangoproject.com/ticket/18165
+            # WTF django??
+            if order_type:
+                return self.queryset.annotate(Max(fieldname)).order_by(order+'__max')
+            else:
+                return self.queryset.annotate(Min(fieldname)).order_by(order+'__min')
+        return self.queryset.order_by(order)
+
 
     def is_order_by_m2m(self):
         if not self.order_field:
@@ -39,6 +56,7 @@ class ProcessOrderFilter:
         if getattr(self.order_field, 'is_relation', False) and getattr(self.order_field, 'm2m_field_name', None):
             return True
         return False
+
 
     def validate_value(self, value):
         if not isinstance(value, STRING_TYPES):
