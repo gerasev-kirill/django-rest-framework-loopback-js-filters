@@ -3,8 +3,8 @@ from rest_framework.exceptions import ParseError, NotAcceptable
 from django.db.models import Q, fields as djFields
 from django.utils import six
 from collections import OrderedDict
-from django.db.models.fields.reverse_related import ManyToOneRel
-
+from django.db.models.fields.reverse_related import ManyToOneRel as ManyToOneRelReversed, ManyToManyRel as ManyToManyRelReversed
+from django.db.models.fields.related import ManyToManyField
 
 
 SIMPLE_TYPES = tuple(
@@ -33,7 +33,9 @@ def convert_value_to_python(field, value):
 def is_m2m(f):
     if getattr(f, 'is_relation', False) and getattr(f, 'm2m_field_name', None):
         return True
-    if f.__class__ == ManyToOneRel:
+    if f.__class__ in [ManyToOneRelReversed, ManyToManyRelReversed]:
+        return True
+    if f.__class__ in [ManyToManyField]:
         return True
     return False
 
@@ -72,23 +74,28 @@ class LbWhereQueryConverter(object):
         def get_field(model_fields, _property_path):
             if not _property_path:
                 return None, False
+            m2m = False
             field_instance = None
             property_name = _property_path.pop(0)
             for field in model_fields:
                 if field.name == property_name:
                     related_model = getattr(field, 'related_model', None)
+                    if is_m2m(field):
+                        m2m = True
                     if related_model and _property_path:
                         # relational field
-                        field_instance, m2m = get_field(
+                        field_instance, _m2m = get_field(
                             related_model._meta.get_fields(),
                             _property_path
                         )
+                        m2m = _m2m or m2m
                         break
                     elif related_model and not _property_path:
-                        id_field, m2m = get_field(related_model._meta.get_fields(), ['id'])
+                        id_field, _m2m = get_field(related_model._meta.get_fields(), ['id'])
+                        m2m = _m2m or m2m
                         if id_field:
                             # try to filter by id property
-                            return id_field, is_m2m(field)
+                            return id_field, m2m
                         # 'id' field doesn't exists??
                         # can't query by related_model and not by field
                         raise NotAcceptable(self.error_msgs['no_related_model_field'].format(
@@ -99,7 +106,7 @@ class LbWhereQueryConverter(object):
                         # regular field
                         field_instance = field
                         break
-            return field_instance, is_m2m(field_instance)
+            return field_instance, m2m
 
         _property = property.split('.')
         if len(_property) == 1:
@@ -225,11 +232,9 @@ class LbWhereQueryConverter(object):
             'exclude':{}
         }
 
-        field_instance, self.has_m2m_in_where, normalized_property = self.get_field_by_path(property)
-        if '__' in normalized_property:
-            for f in self.model_fields:
-                if f.name == normalized_property.split('__')[0] and is_m2m(f):
-                    self.has_m2m_in_where = True
+        field_instance, has_m2m, normalized_property = self.get_field_by_path(property)
+        if has_m2m:
+            self.has_m2m_in_where = True
 
 
         if isinstance(data, SIMPLE_TYPES) or data is None:
