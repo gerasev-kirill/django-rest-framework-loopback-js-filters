@@ -54,7 +54,7 @@ class LbWhereQueryConverter(object):
         'field_validation_fail': "Field '{property}' validation error: {error}"
     }
 
-    def __init__(self, model_class, where={}):
+    def __init__(self, model_class, where={}, custom_where_filter_resolver=None):
         if not isinstance(where, dict):
             raise ParseError(self.error_msgs['invalid_type'].format(
                 property='where',
@@ -65,6 +65,7 @@ class LbWhereQueryConverter(object):
         self.model_fields = model_class._meta.get_fields()
         self.model_name = model_class.__name__
         self.has_m2m_in_where = False
+        self.custom_where_filter_resolver = custom_where_filter_resolver
 
 
 
@@ -138,11 +139,25 @@ class LbWhereQueryConverter(object):
     def generate_rawq(self, data):
         q = Q()
         for k,v in data.items():
-            djQ = self.lb_query_to_rawq(k, v)
+            djQ = None
+            if self.custom_where_filter_resolver:
+                if hasattr(self.custom_where_filter_resolver, 'resolve_%s_query' % k):
+                    func = getattr(self.custom_where_filter_resolver, 'resolve_%s_query' % k)
+                    djQ, has_m2m = func(k,v)
+                    if has_m2m:
+                        self.has_m2m_in_where = True
+            if not djQ:
+                djQ = self.lb_query_to_rawq(k, v)
             if djQ['filter']:
-                q &= Q(**djQ['filter'])
+                if isinstance(djQ['filter'], Q):
+                    q &= djQ['filter']
+                else:
+                    q &= Q(**djQ['filter'])
             if djQ['exclude']:
-                q &= ~Q(**djQ['exclude'])
+                if isinstance(djQ['exclude'], Q):
+                    q &= djQ['exclude']
+                else:
+                    q &= ~Q(**djQ['exclude'])
         return q
 
 

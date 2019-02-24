@@ -30,7 +30,14 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
         queryset = p.filter_queryset()
 
         if _filter.get('where', None):
-            p = ProcessWhereFilter(queryset, _filter['where'])
+            if hasattr(self, 'custom_where_filter_resolver'):
+                p = ProcessWhereFilter(
+                    queryset,
+                    _filter['where'],
+                    custom_where_filter_resolver=self.custom_where_filter_resolver()
+                )
+            else:
+                p = ProcessWhereFilter(queryset, _filter['where'])
             queryset = p.filter_queryset()
             has_m2m_in_where = p.is_where_with_m2m()
 
