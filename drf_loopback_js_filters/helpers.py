@@ -306,11 +306,21 @@ class LbWhereQueryConverter(object):
                         orQ |= self.generate_rawq(orWhere)
                     q = q & orQ
                     continue
-                djQ = self.lb_query_to_rawq(k, v)
-                if djQ['filter']:
-                    q &= Q(**djQ['filter'])
-                if djQ['exclude']:
-                    q &= ~Q(**djQ['exclude'])
+                if self.custom_where_filter_resolver and hasattr(self.custom_where_filter_resolver, 'resolve_%s_query' % k):
+                    func = getattr(self.custom_where_filter_resolver, 'resolve_%s_query' % k)
+                    djQ, has_m2m = func(k,v)
+                    if has_m2m:
+                        self.has_m2m_in_where = True
+                    if djQ['filter']:
+                        q &= djQ['filter']
+                    if djQ['exclude']:
+                        q &= ~djQ['filter']
+                else:
+                    djQ = self.lb_query_to_rawq(k, v)
+                    if djQ['filter']:
+                        q &= Q(**djQ['filter'])
+                    if djQ['exclude']:
+                        q &= ~Q(**djQ['exclude'])
 
         elif 'and' in self.where:
             if not isinstance(self.where['and'], list):
