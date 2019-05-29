@@ -80,7 +80,6 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
             else:
                 queryset = queryset.distinct()
         '''
-
         p = ProcessLimitSkipFilter(queryset, _filter)
         queryset = p.filter_queryset()
         return queryset
@@ -107,6 +106,10 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
             try:
                 _where = json.loads(_where)
                 _filter = {'where': _where}
+                if query.get('limit', None):
+                    _filter['limit'] = int(query['limit'])
+                if query.get('skip', None):
+                    _filter['skip'] = int(query['skip'])
             except:
                 raise ParseError(self.error_msgs['malformed_json'].format(
                     property='where'
