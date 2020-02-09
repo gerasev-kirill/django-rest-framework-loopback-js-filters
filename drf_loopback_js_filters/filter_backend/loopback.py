@@ -86,6 +86,14 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
 
 
     def filter_queryset(self, request, queryset, view):
+        method = getattr(view, view.action)
+        ignore_filter_backend = getattr(method, 'ignore_filter_backend', False)
+        if isinstance(ignore_filter_backend, bool) and ignore_filter_backend:
+            return queryset
+
+        if isinstance(ignore_filter_backend, (list, tuple)) and queryset.model.__name__ in ignore_filter_backend:
+            return queryset
+
         query = request.query_params or {}
         _where = query.get('where', None)
         _filter = query.get('filter', None)
