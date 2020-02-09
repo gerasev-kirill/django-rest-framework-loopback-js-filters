@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.core import exceptions as djExceptions
 from rest_framework.exceptions import ParseError, NotAcceptable
 from django.db.models import Q, fields as djFields

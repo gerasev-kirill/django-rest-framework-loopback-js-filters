@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from drf_loopback_js_filters.helpers import LbWhereQueryConverter
 from rest_framework.exceptions import APIException
 

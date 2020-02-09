@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from rest_framework.filters import BaseFilterBackend
 from django.core import exceptions as djExceptions
 from rest_framework.exceptions import NotAcceptable, ParseError
