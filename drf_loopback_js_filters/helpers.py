@@ -6,6 +6,7 @@ from django.utils import six
 from collections import OrderedDict
 from django.db.models.fields.reverse_related import ManyToOneRel as ManyToOneRelReversed, ManyToManyRel as ManyToManyRelReversed
 from django.db.models.fields.related import ManyToManyField
+from django.db.models import Count
 
 
 SIMPLE_TYPES = tuple(
@@ -52,7 +53,8 @@ class LbWhereQueryConverter(object):
 
         'no_related_model_field': "To filter queryset against related model '{model_name}' use '{property}.some_field' instead of '{property}'",
         'field_doesnt_exist': "Field '{property}' for model '{model_name}' does't exists. You can't use 'where' filter",
-        'field_validation_fail': "Field '{property}' validation error: {error}"
+        'field_validation_fail': "Field '{property}' validation error: {error}",
+        'field_is_not_m2m': "Field '{property}' for model '{model_name}' doesnt have many-to-many relation. You cant use 'count' on it"
     }
 
     def __init__(self, model_class, where={}, custom_where_filter_resolver=None):
@@ -139,6 +141,7 @@ class LbWhereQueryConverter(object):
 
     def generate_rawq(self, data):
         q = Q()
+        annotate = {}
         for k,v in data.items():
             djQ = None
             if self.custom_where_filter_resolver:
@@ -159,7 +162,9 @@ class LbWhereQueryConverter(object):
                     q &= djQ['exclude']
                 else:
                     q &= ~Q(**djQ['exclude'])
-        return q
+            if djQ.get('annotate', None):
+                annotate.update(djQ['annotate'])
+        return q, annotate
 
 
 
@@ -240,12 +245,24 @@ class LbWhereQueryConverter(object):
     def _nilike(self, q, property, value, options=None):
         q['exclude'][property+'__icontains'] = value
 
+    def _count(self, q, property, value, options=None):
+        field, is_m2m, real_property = self.get_field_by_path(property)
+        if not is_m2m:
+            raise ParseError(self.error_msgs['field_is_not_m2m'].format(
+                property=property,
+                model_name=self.model_name
+            ))
+        q['annotate'] = {}
+        q['annotate'][real_property + '__count__lbf'] = Count(real_property)
+        q['filter'][real_property + '__count__lbf'] = value
+
 
 
     def lb_query_to_rawq(self, property, data):
         q = {
             'filter':{},
-            'exclude':{}
+            'exclude':{},
+            'annotate':{}
         }
 
         field_instance, has_m2m, normalized_property = self.get_field_by_path(property)
@@ -290,6 +307,7 @@ class LbWhereQueryConverter(object):
 
     def to_q(self):
         q = Q()
+        annotate = {}
 
         if 'or' in self.where:
             if not isinstance(self.where['or'], list):
@@ -304,7 +322,9 @@ class LbWhereQueryConverter(object):
                 if k=='or':
                     orQ = Q()
                     for orWhere in v:
-                        orQ |= self.generate_rawq(orWhere)
+                        rq, ra = self.generate_rawq(orWhere)
+                        orQ |= rq
+                        annotate.update(ra)
                     q = q & orQ
                     continue
                 if self.custom_where_filter_resolver and hasattr(self.custom_where_filter_resolver, 'resolve_%s_query' % k):
@@ -322,6 +342,8 @@ class LbWhereQueryConverter(object):
                         q &= Q(**djQ['filter'])
                     if djQ['exclude']:
                         q &= ~Q(**djQ['exclude'])
+                    if djQ.get('annotate', {}):
+                        annotate.update(djQ['annotate'])
 
         elif 'and' in self.where:
             if not isinstance(self.where['and'], list):
@@ -334,9 +356,9 @@ class LbWhereQueryConverter(object):
             _q = OrderedDict()
             for o in self.where['and']:
                 _q.update(o)
-            q = self.generate_rawq(_q)
+            q, annotate = self.generate_rawq(_q)
 
         else:
-            q = self.generate_rawq(self.where)
+            q, annotate = self.generate_rawq(self.where)
 
-        return q
+        return q, annotate

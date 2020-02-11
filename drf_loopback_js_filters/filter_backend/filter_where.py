@@ -22,6 +22,8 @@ class ProcessWhereFilter:
             where=self.where,
             custom_where_filter_resolver=self.custom_where_filter_resolver
         )
-        q = converter.to_q()
+        q, annotate = converter.to_q()
         self.has_m2m_in_where = converter.has_m2m_in_where
+        if annotate:
+            return self.queryset.annotate(**annotate).filter(q)
         return self.queryset.filter(q)
