@@ -67,6 +67,9 @@ class ProcessOrderFilter:
                 type=type(value)
             ))
 
+        if value.strip() == '?':
+            return '?'
+
         if len(value.split(' ')) != 2:
             raise ParseError(self.error_msgs['malformed_order'])
 
