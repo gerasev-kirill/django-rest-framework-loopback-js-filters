@@ -4,6 +4,7 @@ from rest_framework import exceptions
 from drf_loopback_js_filters import LoopbackJsFilterBackend
 
 from .fake_request import FakeRequest
+from .models import TestModel
 
 
 
@@ -23,7 +24,7 @@ class ParserTest(TestCase):
             ERROR_MSGS['malformed_json'].format(property='filter'),
             self.backend.filter_queryset,
 
-            request, None, None
+            request, TestModel.objects.all(), None
         )
 
 
@@ -35,7 +36,7 @@ class ParserTest(TestCase):
             ERROR_MSGS['malformed_json'].format(property='where'),
             self.backend.filter_queryset,
 
-            request, None, None
+            request, TestModel.objects.all(), None
         )
 
 
@@ -47,5 +48,5 @@ class ParserTest(TestCase):
             ERROR_MSGS['both_filter_and_where'],
             self.backend.filter_queryset,
 
-            request, None, None
+            request, TestModel.objects.all(), None
         )

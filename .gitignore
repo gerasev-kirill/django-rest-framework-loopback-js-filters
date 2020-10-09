@@ -4,6 +4,7 @@ dist
 *.pyo
 ap2
 ap3
+ap4
 *.sqlite3
 .*
 /key.json

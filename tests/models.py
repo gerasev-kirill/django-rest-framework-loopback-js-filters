@@ -10,5 +10,5 @@ class TestModel(models.Model):
     date_field = models.DateField(null=True)
     datetime_field = models.DateTimeField(null=True)
 
-    foreign_field = models.ForeignKey(User, null=True, related_name="testModel_by_foreign")
+    foreign_field = models.ForeignKey(User, null=True, related_name="testModel_by_foreign", on_delete=models.CASCADE)
     m2m_field = models.ManyToManyField(User, related_name="testModel_by_m2m")

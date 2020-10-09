@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+import six
 from rest_framework.exceptions import NotAcceptable, ParseError
 from django.db.models import Max, Min
-from django.utils import six
 
 
 ORDER_TYPES = {

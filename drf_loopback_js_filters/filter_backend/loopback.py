@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from rest_framework.filters import BaseFilterBackend
-from django.core import exceptions as djExceptions
 from rest_framework.exceptions import NotAcceptable, ParseError
 from django.db import connections
 
@@ -87,10 +86,12 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
 
 
     def filter_queryset(self, request, queryset, view):
-        method = getattr(view, view.action)
-        ignore_filter_backend = getattr(method, 'ignore_filter_backend', False)
-        if isinstance(ignore_filter_backend, bool) and ignore_filter_backend:
-            return queryset
+        ignore_filter_backend = []
+        if view:
+            method = getattr(view, view.action)
+            ignore_filter_backend = getattr(method, 'ignore_filter_backend', False)
+            if ignore_filter_backend is True:
+                return queryset
 
         if isinstance(ignore_filter_backend, (list, tuple)) and queryset.model.__name__ in ignore_filter_backend:
             return queryset

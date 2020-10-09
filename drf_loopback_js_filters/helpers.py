@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
+import six
 from django.core import exceptions as djExceptions
 from rest_framework.exceptions import ParseError, NotAcceptable
 from django.db.models import Q, fields as djFields
-from django.utils import six
 from collections import OrderedDict
 from django.db.models.fields.reverse_related import ManyToOneRel as ManyToOneRelReversed, ManyToManyRel as ManyToManyRelReversed
 from django.db.models.fields.related import ManyToManyField
