@@ -3,7 +3,7 @@ from rest_framework.filters import BaseFilterBackend
 from rest_framework.exceptions import NotAcceptable, ParseError
 from django.db import connections
 
-import json
+import json, warnings
 
 from .filter_where import ProcessWhereFilter
 from .filter_fields import ProcessFieldsFilter
@@ -142,3 +142,28 @@ class LoopbackJsFilterBackend(BaseFilterBackend):
             ]
         except:
             return []
+
+    def get_schema_operation_parameters(self, view):
+        return [{
+            'name': 'filter',
+            'required': False,
+            'in': 'query',
+            'description': 'Filter defining fields, where, order, skip, and limit. <a target="_blank" href="https://loopback.io/doc/en/lb2/Querying-data.html#using-stringified-json-in-rest-queries">Docs here</a>',
+            'schema':{
+                'type': 'object',
+                'properties': {
+                    'where': {
+                        'type': 'object'
+                    },
+                    'limit': {
+                        'type': 'integer'
+                    },
+                    'skip': {
+                        'type': 'integer'
+                    },
+                    'order': {
+                        'type': 'string'
+                    }
+                }
+            }
+        }]
